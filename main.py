@@ -80,6 +80,11 @@ import re
 from machine import reset
 from sys import exit
 
+# A chance to hit Ctrl+C in REPL for Debugging
+print('main.py: Press CTRL+C to drop to REPL...')
+print()
+time.sleep(2) 
+
 # Downloaded Micropython Modules
 import urequest
 from dst import dst
