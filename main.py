@@ -20,8 +20,9 @@ TinyPICO 3V3 <--> FS1000A VCC
 20Amp 120V Wall Outlet <--> 15Amp 433MHz Dewenwils Relay <--> 12Amp Chevy Volt car charger
 
 ### Software Installation:
-mkdir ~/psp-build
-cd ~/psp-build
+mkdir ~/micropython-build
+cd ~/micropython-build
+
 python3 -m pip install pyvenv
 python3 -m venv ~/micropython-env
 source micropython-env/bin/activate
@@ -37,7 +38,7 @@ wget https://github.com/micropython/micropython-lib/raw/master/micropython/urlli
 mpremote cp urequest.py :
 
 git clone https://github.com/peterhinch/micropython-remote
-cd micropython-remote
+cd micropython-remote/
 mpremote cp -r tx/ :
 
 cd ../
