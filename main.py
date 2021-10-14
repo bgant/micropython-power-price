@@ -97,7 +97,7 @@ def psp_download():
     psp_file = open('retail-energy.html', 'wt')
     print(response.read(), file=psp_file)
     psp_file.close()
-    print('New retail-energy.html file written to disk... Rebooting in one minute...')
+    print('{timestamp} New retail-energy.html file written to disk... Rebooting in one minute...')
     time.sleep(65)
     reset()
 
@@ -105,11 +105,11 @@ def psp_download():
 def check_date():
     psp_file_day = re.search('<td id="Date">(.*?)</td>', html)
     if psp_file_day is None:
-        print('retail-energy.html is bad... Check URL manually... Exiting...')
+        print('{timestamp} retail-energy.html is bad... Check URL manually... Exiting...')
         print()
         exit()
     elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(dst())[2]:
-        print('Accessing the site after 5:30PM gets tomorrows data... Exiting...')
+        print('{timestamp} Accessing the site after 5:30PM gets tomorrows data... Exiting...')
         print()
         exit()
     elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(dst())[2]:
@@ -118,7 +118,7 @@ def check_date():
         print(f"retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
         print()
     else:
-        print('Something went wrong... Exiting...')
+        print('{timestamp} Something went wrong... Exiting...')
         print()
         exit()
 
@@ -161,10 +161,10 @@ def psp_median():
 # Turn 433MHz Power ON/OFF if less than Average, Median, and Max Price
 def psp_power(max=0.7):
     if today[hour] < average and today[hour] < median and today[hour] < max:
-        print(f'Hour {hour:02} Price of {today[hour]:.3f} is  lower than Average, Median, and Max price... Turning power ON')
+        print(f'{timestamp()} Hour {hour:02} Price of {today[hour]:.3f} is  lower than Average, Median, and Max price... Turning power ON')
         transmit('on')
     else:
-        print(f'Hour {hour:02} Price of {today[hour]:.3f} is higher than Average, Median, and Max price... Turning power OFF')
+        print(f'{timestamp()} Hour {hour:02} Price of {today[hour]:.3f} is higher than Average, Median, and Max price... Turning power OFF')
         transmit('off')
 
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
@@ -189,6 +189,10 @@ def isTopOfHour():
         return True
     else:
         return False
+
+# Timestamp for debugging
+def timestamp():
+    return f'[{time.localtime(dst())[3]:02}:{time.localtime(dst())[4]:02}:{time.localtime(dst())[5]:02}]'
 
 
 ############################################
