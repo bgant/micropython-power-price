@@ -81,7 +81,7 @@ from sys import exit
 
 # Downloaded Micropython Modules
 import urequest
-from local_time import ltime
+from dst import dst
 from tx import TX
 from tx.get_pin import pin
 
@@ -107,13 +107,13 @@ def check_date():
         print('retail-energy.html is bad... Check URL manually... Exiting...')
         print()
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(ltime())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(dst())[2]:
         print('Accessing the site after 5:30PM gets tomorrows data... Exiting...')
         print()
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(ltime())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(dst())[2]:
         psp_download()
-    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(ltime())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(dst())[2]:
         print(f"retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
         print()
     else:
@@ -169,15 +169,15 @@ def psp_power(max=0.7):
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
 # (keep in mind that Hour 24 is actually midnight for the next day)
 def midnight_fix():
-    if time.localtime(ltime())[3] == 0:
+    if time.localtime(dst())[3] == 0:
         hour = 24
     else:
-        hour = time.localtime(ltime())[3]
+        hour = time.localtime(dst())[3]
     return hour
 
 # Download new data at 1AM
 def is1AM():
-    if time.localtime(ltime())[3] == 1:
+    if time.localtime(dst())[3] == 1:
         return True
     else:
         return False
