@@ -102,7 +102,7 @@ def psp_download():
     psp_file = open('retail-energy.html', 'wt')
     print(response.read(), file=psp_file)
     psp_file.close()
-    print('{timestamp} New retail-energy.html file written to disk... Rebooting in one minute...')
+    print(f'{timestamp()} New retail-energy.html file written to disk... Rebooting in one minute...')
     time.sleep(65)
     reset()
 
@@ -110,21 +110,17 @@ def psp_download():
 def check_date():
     psp_file_day = re.search('<td id="Date">(.*?)</td>', html)
     if psp_file_day is None:
-        print('{timestamp} retail-energy.html is bad... Check URL manually... Exiting...')
-        print()
+        print(f'{timestamp()} retail-energy.html is bad... Check URL manually... Exiting...')
         exit()
     elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(dst())[2]:
-        print('{timestamp} Accessing the site after 5:30PM gets tomorrows data... Exiting...')
-        print()
+        print(f'{timestamp()} Accessing the site after 5:30PM gets tomorrows data... Exiting...')
         exit()
     elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(dst())[2]:
         psp_download()
     elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(dst())[2]:
-        print(f"retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
-        print()
+        print(f"{timestamp()} retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
     else:
-        print('{timestamp} Something went wrong... Exiting...')
-        print()
+        print(f'{timestamp()} Something went wrong... Exiting...')
         exit()
 
 # Parse HTML for table data
@@ -138,9 +134,8 @@ def psp_parse():
         price = re.search('<td id="Price">(.*?)</td>', line)
         if hour is not None:  # <tr>, </tr>, or blank lines
             today[int(hour.group(1))] = float(price.group(1))
-    print("Hour and Price data from today's retail-energy.html file:")
+    #print("Hour and Price data from today's retail-energy.html file:")
     print(today)
-    print()
     return today
 
 # Calculate Average Price for Today
