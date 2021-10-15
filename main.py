@@ -155,7 +155,6 @@ def psp_median():
     median_list.sort()
     median = float(median_list[int(len(median_list)/2)])  # Price in center of sorted list of Prices
     print(f' Median Price Today: {median:.3f}')
-    print()
     return median
 
 # Turn 433MHz Power ON/OFF if less than Average, Median, and Max Price
@@ -196,7 +195,7 @@ def timestamp():
 
 
 ############################################
-# Initialize variables on boot
+# Initialize on boot
 ############################################
 
 # Load file containing 433MHz transmit codes
