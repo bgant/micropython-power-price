@@ -45,6 +45,7 @@ cd ../
 git clone https://github.com/bgant/micropython-wifi
 cd micropython-wifi/
 mpremote cp key_store.py :
+mpremote cp timezone.py :
 mpremote cp soft_wdt.py :
 mpremote cp TinyPICO_RGB.py :
 mpremote cp boot.py :
@@ -54,11 +55,6 @@ reset()
 <enter your Wifi SSID and Password and make sure it connects>
 <if you made a mistake run import key_store and key_store.init() to change SSID and Password>
 <Ctrl+] to exit REPL>
-
-cd ../
-git clone https://github.com/bgant/micropython-daylight-savings
-cd micropython-daylight-savings/
-mpremote cp dst.py :
 
 cd ../
 git clone https://github.com/bgant/micropython-power-price
@@ -87,7 +83,7 @@ time.sleep(2)
 
 # Downloaded Micropython Modules
 import urequest
-from dst import dst
+from timezone import tz
 from tx import TX
 from tx.get_pin import pin
 
@@ -112,12 +108,12 @@ def check_date():
     if psp_file_day is None:
         print(f'{timestamp()} retail-energy.html is bad... Check URL manually... Exiting...')
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(dst())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(tz())[2]:
         print(f'{timestamp()} Accessing the site after 5:30PM gets tomorrows data... Exiting...')
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(dst())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(tz())[2]:
         psp_download()
-    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(dst())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(tz())[2]:
         print(f"{timestamp()} retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
     else:
         print(f'{timestamp()} Something went wrong... Exiting...')
@@ -169,15 +165,15 @@ def psp_power(max=0.7):
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
 # (keep in mind that Hour 24 is actually midnight for the next day)
 def midnight_fix():
-    if time.localtime(dst())[3] == 0:
+    if time.localtime(tz())[3] == 0:
         hour = 24
     else:
-        hour = time.localtime(dst())[3]
+        hour = time.localtime(tz())[3]
     return hour
 
 # Download new data at 1AM
 def is1AM():
-    if time.localtime(dst())[3] == 1:
+    if time.localtime(tz())[3] == 1:
         return True
     else:
         return False
@@ -191,7 +187,7 @@ def isTopOfHour():
 
 # Timestamp for debugging
 def timestamp():
-    return f'[{time.localtime(dst())[3]:02}:{time.localtime(dst())[4]:02}:{time.localtime(dst())[5]:02}]'
+    return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
 
 
 ############################################
