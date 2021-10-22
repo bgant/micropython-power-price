@@ -87,6 +87,7 @@ import urequest
 from timezone import tz
 from tx import TX
 from tx.get_pin import pin
+import TinyPICO_RGB
 
 
 ############################################
@@ -181,9 +182,11 @@ def psp_power(max=0.07):
     #if today[hour] < average and today[hour] < median and today[hour] < max:
     if today[hour] < threshold and today[hour] < max:
         print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {threshold:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
+        led('green')
         transmit('on')
     else:
         print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is higher than {threshold:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
+        led('yellow')
         transmit('off')
 
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
@@ -212,6 +215,14 @@ def isTopOfHour():
 # Timestamp for debugging
 def timestamp():
     return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
+
+def led(color):
+    if color == 'yellow':
+        TinyPICO_RGB.solid(155,155,0)
+    elif color == 'green':
+        TinyPICO_RGB.solid(0,155,0)
+    else:
+        TinyPICO_RGB.off()
 
 
 ############################################
