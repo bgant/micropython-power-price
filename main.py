@@ -75,6 +75,7 @@ import time
 import re
 from machine import reset
 from sys import exit
+import json
 
 # A chance to hit Ctrl+C in REPL for Debugging
 print('main.py: Press CTRL+C to enter REPL...')
@@ -131,7 +132,7 @@ def psp_parse():
         if hour is not None:  # <tr>, </tr>, or blank lines
             today[int(hour.group(1))] = float(price.group(1))
     #print("Hour and Price data from today's retail-energy.html file:")
-    print(today)
+    #print(today)
     return today
 
 # Calculate Average Price for Today
@@ -140,7 +141,7 @@ def psp_average():
     for hour in today:
         average += float(today[hour])
     average /= len(today)  # Price easily affected by high/low outliers
-    print(f'Average Price Today: {average:.3f}')
+    #print(f'Average Price Today: {average:.3f}')
     return average
 
 # Calculate Median (middle) Price for Today
@@ -150,16 +151,39 @@ def psp_median():
         median_list.append(today[hour])
     median_list.sort()
     median = float(median_list[int(len(median_list)/2)])  # Price in center of sorted list of Prices
-    print(f' Median Price Today: {median:.3f}')
+    #print(f' Median Price Today: {median:.3f}')
     return median
 
-# Turn 433MHz Power ON/OFF if less than Average, Median, and Max Price
-def psp_power(max=0.7):
-    if today[hour] < average and today[hour] < median and today[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price of {today[hour]:.3f} is  lower than Average, Median, and Max price... Turning power ON')
+# Update weekly Price average and median data to disk
+def weekly_average_write():
+    try:
+        weekly_averages = key_store.get('weekly_averages')
+        weekly_averages = json.loads(weekly_averages)
+        weekly_averages[time.localtime(tz())[6]] = psp_average()  # Add Today's Average Price
+    except:
+        # Initialize variable if not in Key Store data
+        weekly_averages = {}
+        weekly_averages[time.localtime(tz())[6]] = psp_average()  # Add Today's Average Price
+    key_store.set('weekly_averages', str(weekly_averages))
+
+# Read weekly Price data from disk
+def weekly_average_read():
+    weekly_averages = key_store.get('weekly_averages')    
+    weekly_averages = json.loads(weekly_averages)
+    price_threshold = 0.0
+    for day in weekly_averages:
+        price_threshold += weekly_averages[day]
+    price_threshold /= len(weekly_averages)
+    return price_threshold
+
+# Turn 433MHz Power ON/OFF
+def psp_power(max=0.07):
+    #if today[hour] < average and today[hour] < median and today[hour] < max:
+    if today[hour] < threshold and today[hour] < max:
+        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {threshold:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
         transmit('on')
     else:
-        print(f'{timestamp()} Hour {hour:02} Price of {today[hour]:.3f} is higher than Average, Median, and Max price... Turning power OFF')
+        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is higher than {threshold:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
         transmit('off')
 
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
@@ -211,13 +235,13 @@ try:
 except:
     psp_download()
 
-check_date()             # Verify data in retail-energy.html is for today
-today = psp_parse()      # Parse Table in retail-energy.html into dictionary
-average = psp_average()  # Calculate Average Price Today
-median = psp_median()    # Calculate Median (middle) Price Today
-hour = midnight_fix()    # Align time.localtime (0) and retail-energy.html (24) midnight hours
-psp_power()              # Turn Power ON/OFF Based on Current Hour Price
-time.sleep(30)           # Wait a bit before jumping into While loop
+check_date()                         # Verify data in retail-energy.html is for today
+today = psp_parse()                  # Parse Table in retail-energy.html into dictionary
+weekly_average_write()               # Write Today's Average Price to Key Store
+threshold = weekly_average_read()    # Read Weekly list of Average Prices from Key Store
+hour = midnight_fix()                # Align time.localtime (0) and retail-energy.html (24) midnight hours
+psp_power()                          # Turn Power ON/OFF Based on Current Hour Price
+time.sleep(30)                       # Wait a bit before jumping into While loop
 
 
 ############################################
