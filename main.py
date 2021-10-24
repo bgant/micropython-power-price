@@ -155,7 +155,7 @@ def psp_median():
     #print(f' Median Price Today: {median:.3f}')
     return median
 
-# Update weekly Price average and median data to disk
+# Update weekly Price average data to disk
 def weekly_average_write():
     try:
         weekly_averages = key_store.get('weekly_averages')
@@ -171,26 +171,26 @@ def weekly_average_write():
 def weekly_average_read():
     weekly_averages = key_store.get('weekly_averages')    
     weekly_averages = json.loads(weekly_averages)
-    price_threshold = 0.0
+    price = 0.0
     for day in weekly_averages:
-        price_threshold += weekly_averages[day]
-    price_threshold /= len(weekly_averages)
-    return price_threshold
+        price += weekly_averages[day]
+    price /= len(weekly_averages)
+    return price
 
-# Turn 433MHz Power ON/OFF
+# Turn 433MHz Power Relay ON/OFF
 def psp_power(max=0.07):
     #if today[hour] < average and today[hour] < median and today[hour] < max:
-    if today[hour] < threshold and today[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {threshold:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
+    if today[hour] < weekly_average and today[hour] < max:
+        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
         led('green')
         transmit('on')
     else:
-        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is higher than {threshold:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
+        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
         led('yellow')
         transmit('off')
 
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
-# (keep in mind that Hour 24 is actually midnight for the next day)
+# (keep in mind that Hour 24 is midnight for the next day which is why new data is downloaded at 1AM)
 def midnight_fix():
     if time.localtime(tz())[3] == 0:
         hour = 24
@@ -199,14 +199,14 @@ def midnight_fix():
     return hour
 
 # Download new data at 1AM
-def is1AM():
+def is_1AM():
     if time.localtime(tz())[3] == 1:
         return True
     else:
         return False
 
 # Only turn Power ON/OFF at the top of each hour
-def isTopOfHour():
+def is_top_of_hour():
     if time.localtime()[4] == 0:  # Minute 00 / No need for lftime CST/CDT hours
         return True
     else:
@@ -246,13 +246,13 @@ try:
 except:
     psp_download()
 
-check_date()                         # Verify data in retail-energy.html is for today
-today = psp_parse()                  # Parse Table in retail-energy.html into dictionary
-weekly_average_write()               # Write Today's Average Price to Key Store
-threshold = weekly_average_read()    # Read Weekly list of Average Prices from Key Store
-hour = midnight_fix()                # Align time.localtime (0) and retail-energy.html (24) midnight hours
-psp_power()                          # Turn Power ON/OFF Based on Current Hour Price
-time.sleep(30)                       # Wait a bit before jumping into While loop
+check_date()                            # Verify data in retail-energy.html is for today
+today = psp_parse()                     # Parse Table in retail-energy.html into dictionary
+weekly_average_write()                  # Write Today's Average Price to Key Store
+weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
+hour = midnight_fix()                   # Align time.localtime (0) and retail-energy.html (24) midnight hours
+psp_power()                             # Turn Power ON/OFF Based on Current Hour Price
+time.sleep(30)                          # Wait a bit before jumping into While loop
 
 
 ############################################
@@ -260,8 +260,8 @@ time.sleep(30)                       # Wait a bit before jumping into While loop
 ############################################
 
 while True:
-    if isTopOfHour():
-        if is1AM():
+    if is_top_of_hour():
+        if is_1AM():
             check_date()  # At 1:00AM download new data, reboot, and re-initialize variables
         hour = midnight_fix() 
         psp_power()
