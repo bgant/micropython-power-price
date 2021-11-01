@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-10-13
+Updated: 2021-11-01
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -96,6 +96,9 @@ import TinyPICO_RGB
 
 # Download Power Smart Pricing data (after 5:30PM you get tomorrow's data)
 def psp_download():
+    if time.localtime(tz())[3] >= 16:
+        print("Downloading data after 4:30PM Central Time gets tomorrow's pricing... Exiting...")
+        exit()
     response = urequest.urlopen('https://www.ameren.com/account/retail-energy')
     psp_file = open('retail-energy.html', 'wt')
     print(response.read(), file=psp_file)
@@ -110,10 +113,7 @@ def check_date():
     if psp_file_day is None:
         print(f'{timestamp()} retail-energy.html is bad... Check URL manually... Exiting...')
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) > time.localtime(tz())[2]:
-        print(f'{timestamp()} Accessing the site after 5:30PM gets tomorrows data... Exiting...')
-        exit()
-    elif int(psp_file_day.group(1).split('-')[2]) < time.localtime(tz())[2]:
+    elif int(psp_file_day.group(1).split('-')[2]) != time.localtime(tz())[2]:
         psp_download()
     elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(tz())[2]:
         print(f"{timestamp()} retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
