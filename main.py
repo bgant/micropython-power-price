@@ -94,7 +94,7 @@ import TinyPICO_RGB
 # Define Functions
 ############################################
 
-# Download Power Smart Pricing data (after 5:30PM you get tomorrow's data)
+# Download Power Smart Pricing data
 def psp_download():
     if time.localtime(tz())[3] >= 16:
         print("Downloading data after 4:30PM Central Time gets tomorrow's pricing... Exiting...")
