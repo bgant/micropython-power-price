@@ -34,8 +34,8 @@ wget https://micropython.org/resources/firmware/tinypico-20210902-v1.17.bin
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 tinypico-20210902-v1.17.bin
 
-wget https://github.com/micropython/micropython-lib/raw/master/micropython/urllib.urequest/urllib/urequest.py
-mpremote cp urequest.py :
+wget https://github.com/micropython/micropython-lib/raw/master/python-ecosys/urequests/urequests.py
+mpremote cp urequests.py :
 
 git clone https://github.com/peterhinch/micropython-remote
 cd micropython-remote/
@@ -83,7 +83,7 @@ print()
 time.sleep(2) 
 
 # Downloaded Micropython Modules
-import urequest
+import urequests
 from timezone import tz
 from tx import TX
 from tx.get_pin import pin
@@ -99,10 +99,13 @@ def psp_download():
     if time.localtime(tz())[3] >= 16:
         print("Downloading data after 4:30PM Central Time gets tomorrow's pricing... Exiting...")
         exit()
-    response = urequest.urlopen('https://www.ameren.com/account/retail-energy')
+    url = 'https://www.ameren.com/account/retail-energy'
+    headers = {'User-Agent': 'https://github.com/bgant/micropython-power-price'}
+    response = urequests.get(url, headers=headers)
     psp_file = open('retail-energy.html', 'wt')
-    print(response.read(), file=psp_file)
+    print(response.content, file=psp_file)
     psp_file.close()
+    response.close()
     print(f'{timestamp()} New retail-energy.html file written to disk... Rebooting in one minute...')
     time.sleep(65)
     reset()
