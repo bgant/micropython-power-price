@@ -102,24 +102,24 @@ def psp_download():
     url = 'https://www.ameren.com/account/retail-energy'
     headers = {'User-Agent': 'https://github.com/bgant/micropython-power-price'}
     response = urequests.get(url, headers=headers)
-    psp_file = open('retail-energy.html', 'wt')
+    psp_file = open('psp-data.html', 'wt')
     print(response.content, file=psp_file)
     psp_file.close()
     response.close()
-    print(f'{timestamp()} New retail-energy.html file written to disk... Rebooting in one minute...')
+    print(f'{timestamp()} New psp-data.html file written to disk... Rebooting in one minute...')
     time.sleep(65)
     reset()
 
-# Check that retail-energy.html data is for today
+# Check that psp-data.html data is for today
 def check_date():
     psp_file_day = re.search('<td id="Date">(.*?)</td>', html)
     if psp_file_day is None:
-        print(f'{timestamp()} retail-energy.html is bad... Check URL manually... Exiting...')
+        print(f'{timestamp()} psp-data.html is bad... Check URL manually... Exiting...')
         exit()
     elif int(psp_file_day.group(1).split('-')[2]) != time.localtime(tz())[2]:
         psp_download()
     elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(tz())[2]:
-        print(f"{timestamp()} retail-energy.html file is on disk and matches today's date ({psp_file_day.group(1)})")
+        print(f"{timestamp()} psp-data.html file is on disk and matches today's date ({psp_file_day.group(1)})")
     else:
         print(f'{timestamp()} Something went wrong... Exiting...')
         exit()
@@ -138,7 +138,7 @@ def psp_parse():
                 today[int(hour.group(1))] = float(price.group(1))    # CDT is the same as EST (UTC -5)
             else:
                 today[int(hour.group(1))-1] = float(price.group(1))  # CST is one hour less than EST 
-    #print("Hour and Price data from today's retail-energy.html file:")
+    #print("Hour and Price data from today's psp-data.html file:")
     #print(today)
     return today
 
@@ -195,7 +195,7 @@ def psp_power(max=0.07):
         led('yellow')
         transmit('off')
 
-# Align time.localtime midnight (0) to retail-energy.html midnight (24)
+# Align time.localtime midnight (0) to psp-data.html midnight (24)
 # (keep in mind that Hour 24 is midnight for the next day which is why new data is downloaded at 1AM)
 def midnight_fix():
     if time.localtime(tz())[3] == 0 and tz(format='bool'):  # Set CDT Midnight to Hour 24
@@ -244,19 +244,19 @@ except:
     print()
     exit()
 
-# Read retail-energy.html file if it is already on disk
+# Read psp-data.html file if it is already on disk
 try:
-    psp_file = open('retail-energy.html', 'rt')
+    psp_file = open('psp-data.html', 'rt')
     html = psp_file.read()
     psp_file.close()
 except:
     psp_download()
 
-check_date()                            # Verify data in retail-energy.html is for today
-today = psp_parse()                     # Parse Table in retail-energy.html into dictionary
+check_date()                            # Verify data in psp-data.html is for today
+today = psp_parse()                     # Parse Table in psp-data.html into dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-hour = midnight_fix()                   # Align time.localtime (0) and retail-energy.html (24) midnight hours
+hour = midnight_fix()                   # Align time.localtime (0) and psp-data.html (24) midnight hours
 psp_power()                             # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
