@@ -198,7 +198,7 @@ def psp_power(max=0.07):
 # Align time.localtime midnight (0) to retail-energy.html midnight (24)
 # (keep in mind that Hour 24 is midnight for the next day which is why new data is downloaded at 1AM)
 def midnight_fix():
-    if time.localtime(tz())[3] == 0:
+    if time.localtime(tz())[3] == 0 and tz(format='bool'):  # Set CDT Midnight to Hour 24
         hour = 24
     else:
         hour = time.localtime(tz())[3]
