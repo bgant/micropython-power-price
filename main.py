@@ -134,7 +134,10 @@ def psp_parse():
         hour = re.search('<td id="Hour">(.*?)</td>', line)
         price = re.search('<td id="Price">(.*?)</td>', line)
         if hour is not None:  # <tr>, </tr>, or blank lines
-            today[int(hour.group(1))] = float(price.group(1))
+            if tz(format='bool'):
+                today[int(hour.group(1))] = float(price.group(1))    # CDT is the same as EST (UTC -5)
+            else:
+                today[int(hour.group(1))-1] = float(price.group(1))  # CST is one hour less than EST 
     #print("Hour and Price data from today's retail-energy.html file:")
     #print(today)
     return today
