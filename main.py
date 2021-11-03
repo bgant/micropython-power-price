@@ -60,6 +60,7 @@ cd ../
 git clone https://github.com/bgant/micropython-power-price
 cd micropython-power-price/
 mpremote cp 433MHz_Dewenwils_RC-042_E211835.json :
+mpremote cp psp_html.py :   <-- OR psp_json.py OR psp_csv.py
 mpremote cp main.py :
 
 mpremote  <-- to enter REPL
@@ -83,67 +84,23 @@ print()
 time.sleep(2) 
 
 # Downloaded Micropython Modules
-import urequests
 from timezone import tz
 from tx import TX
 from tx.get_pin import pin
 import TinyPICO_RGB
+
+# Choose a single data download mechanism
+import psp_html as psp
+#import psp_json as psp
+#import psp_csv as psp
 
 
 ############################################
 # Define Functions
 ############################################
 
-# Download Power Smart Pricing data
-def psp_download():
-    if time.localtime(tz())[3] >= 16:
-        print("Downloading data after 4:30PM Central Time gets tomorrow's pricing... Exiting...")
-        exit()
-    url = 'https://www.ameren.com/account/retail-energy'
-    headers = {'User-Agent': 'https://github.com/bgant/micropython-power-price'}
-    response = urequests.get(url, headers=headers)
-    psp_file = open('psp-data.html', 'wt')
-    print(response.content, file=psp_file)
-    psp_file.close()
-    response.close()
-    print(f'{timestamp()} New psp-data.html file written to disk... Rebooting in one minute...')
-    time.sleep(65)
-    reset()
-
-# Check that psp-data.html data is for today
-def check_date():
-    psp_file_day = re.search('<td id="Date">(.*?)</td>', html)
-    if psp_file_day is None:
-        print(f'{timestamp()} psp-data.html is bad... Check URL manually... Exiting...')
-        exit()
-    elif int(psp_file_day.group(1).split('-')[2]) != time.localtime(tz())[2]:
-        psp_download()
-    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(tz())[2]:
-        print(f"{timestamp()} psp-data.html file is on disk and matches today's date ({psp_file_day.group(1)})")
-    else:
-        print(f'{timestamp()} Something went wrong... Exiting...')
-        exit()
-
-# Parse HTML for table data
-def psp_parse():
-    tbody = re.search('<tbody>(.*?)</tbody>', html)
-    td = tbody.group(1).replace('\\n','\n')
-    td = td.replace('</td>\n                            ','</td>')
-    today = {}
-    for line in td.split('\n'):
-        hour = re.search('<td id="Hour">(.*?)</td>', line)
-        price = re.search('<td id="Price">(.*?)</td>', line)
-        if hour is not None:  # <tr>, </tr>, or blank lines
-            if tz(format='bool'):
-                today[int(hour.group(1))] = float(price.group(1))    # CDT is the same as EST (UTC -5)
-            else:
-                today[int(hour.group(1))-1] = float(price.group(1))  # CST is one hour less than EST 
-    #print("Hour and Price data from today's psp-data.html file:")
-    #print(today)
-    return today
-
 # Calculate Average Price for Today
-def psp_average():
+def price_average():
     average = 0.0
     for hour in today:
         average += float(today[hour])
@@ -151,26 +108,16 @@ def psp_average():
     #print(f'Average Price Today: {average:.3f}')
     return average
 
-# Calculate Median (middle) Price for Today
-def psp_median():
-    median_list = []
-    for hour in today:
-        median_list.append(today[hour])
-    median_list.sort()
-    median = float(median_list[int(len(median_list)/2)])  # Price in center of sorted list of Prices
-    #print(f' Median Price Today: {median:.3f}')
-    return median
-
 # Update weekly Price average data to disk
 def weekly_average_write():
     try:
         weekly_averages = key_store.get('weekly_averages')
         weekly_averages = json.loads(weekly_averages)
-        weekly_averages[time.localtime(tz())[6]] = psp_average()  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = price_average()  # Add Today's Average Price
     except:
         # Initialize variable if not in Key Store data
         weekly_averages = {}
-        weekly_averages[time.localtime(tz())[6]] = psp_average()  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = price_average()  # Add Today's Average Price
     key_store.set('weekly_averages', str(weekly_averages))
 
 # Read weekly Price data from disk
@@ -184,7 +131,7 @@ def weekly_average_read():
     return price
 
 # Turn 433MHz Power Relay ON/OFF
-def psp_power(max=0.07):
+def power(max=0.07):
     #if today[hour] < average and today[hour] < median and today[hour] < max:
     if today[hour] < weekly_average and today[hour] < max:
         print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
@@ -195,7 +142,7 @@ def psp_power(max=0.07):
         led('yellow')
         transmit('off')
 
-# Align time.localtime midnight (0) to psp-data.html midnight (24)
+# Align time.localtime midnight (0) to psp-data midnight (24)
 # (keep in mind that Hour 24 is midnight for the next day which is why new data is downloaded at 1AM)
 def midnight_fix():
     if time.localtime(tz())[3] == 0 and tz(format='bool'):  # Set CDT Midnight to Hour 24
@@ -244,20 +191,12 @@ except:
     print()
     exit()
 
-# Read psp-data.html file if it is already on disk
-try:
-    psp_file = open('psp-data.html', 'rt')
-    html = psp_file.read()
-    psp_file.close()
-except:
-    psp_download()
-
-check_date()                            # Verify data in psp-data.html is for today
-today = psp_parse()                     # Parse Table in psp-data.html into dictionary
+psp.check_date()                        # Verify data in psp-data is for today
+today = psp.parse()                     # Parse Table in psp-data into dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-hour = midnight_fix()                   # Align time.localtime (0) and psp-data.html (24) midnight hours
-psp_power()                             # Turn Power ON/OFF Based on Current Hour Price
+hour = midnight_fix()                   # Align time.localtime (0) and psp-data (24) midnight hours
+power()                                 # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
 
@@ -270,7 +209,7 @@ while True:
         if is_1AM():
             check_date()  # At 1:00AM download new data, reboot, and re-initialize variables
         hour = midnight_fix() 
-        psp_power()
+        power()
         time.sleep(65) 
     else:
         #print('sleep')
