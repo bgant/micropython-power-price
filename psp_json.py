@@ -56,17 +56,15 @@ def check_date():
 
 # Parse JSON data
 def parse():
+    global raw_data
     today = {}
-    for line in td.split('\n'):
-        hour = re.search('<td id="Hour">(.*?)</td>', line)
-        price = re.search('<td id="Price">(.*?)</td>', line)
-        if hour is not None:  # <tr>, </tr>, or blank lines
-            if tz(format='bool'):
-                today[int(hour.group(1))] = float(price.group(1))    # CDT is the same as EST (UTC -5)
-            else:
-                today[int(hour.group(1))-1] = float(price.group(1))  # CST is one hour less than EST 
-    #print(f"Hour and Price data from today's {filename} file:")
-    #print(today)
+    for n in range(0,24):
+        hour = raw_data['hourlyPriceDetails'][n]['hour']
+        price = raw_data['hourlyPriceDetails'][n]['price']
+        if tz(format='bool'):
+            today[int(hour)] = float(price)    # CDT is the same as EST (UTC -5)
+        else:
+            today[int(hour)-1] = float(price)  # CST is one hour less than EST 
     return today
 
 def date_today():
