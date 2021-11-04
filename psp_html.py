@@ -40,9 +40,9 @@ def check_date():
     if psp_file_day is None:
         print(f'{timestamp()} {filename} is bad... Check URL manually... Exiting...')
         exit()
-    elif int(psp_file_day.group(1).split('-')[2]) != time.localtime(tz())[2]:
+    elif psp_file_day.group(1) != date_today():
         download()
-    elif int(psp_file_day.group(1).split('-')[2]) == time.localtime(tz())[2]:
+    elif psp_file_day.group(1) == date_today():
         print(f"{timestamp()} {filename} file is on disk and matches today's date ({psp_file_day.group(1)})")
     else:
         print(f'{timestamp()} Something went wrong... Exiting...')
@@ -65,6 +65,20 @@ def parse():
     #print(f"Hour and Price data from today's {filename} file:")
     #print(today)
     return today
+
+# Today's Date in YYYY-MM-DD format
+def date_today():
+    today = time.localtime(tz())
+    tomorrow = time.localtime(tz()+86400)
+    # CDT/EST data or CST/EST data but not 11PM
+    if tz(format='bool') or (not tz(format='bool') and today[3] != 23):
+        return f'{today[0]}-{today[1]:02}-{today[2]:02}'
+    # CST/EST Hour 23 (11PM) is in tomorrow's data (hour -1)
+    elif (not tz(format='bool')) and (today[3] == 23):
+        return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
+    else:
+        print("Something went wrong with the date_today() function...")
+        exit()
 
 # Timestamp for debugging
 def timestamp():
