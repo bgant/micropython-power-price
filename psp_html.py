@@ -15,19 +15,6 @@ import urequests
 
 
 ############################################
-# Data already on Disk?
-############################################
-
-filename = 'psp-data.html'
-try:
-    psp_file = open(filename, 'rt')
-    raw_data = psp_file.read()
-    psp_file.close()
-except:
-    download()
-
-
-############################################
 # Define Functions
 ############################################
 
@@ -82,4 +69,17 @@ def parse():
 # Timestamp for debugging
 def timestamp():
     return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
+
+
+############################################
+# Initialize HTML Data
+############################################
+
+filename = 'psp-data.html'
+try:
+    psp_file = open(filename, 'rt')
+    raw_data = psp_file.read()
+    psp_file.close()
+except:
+    download()
 

@@ -7,19 +7,10 @@
 import time
 from machine import reset
 from sys import exit
-import json
 
 # Downloaded Micropython Modules
 from timezone import tz
 import urequests
-
-
-############################################
-# Data already on Disk?
-############################################
-
-# Converting JSON to a string in a file and
-# then converting it back again is too much work
 
 
 ############################################
@@ -67,6 +58,7 @@ def parse():
             today[int(hour)-1] = float(price)  # CST is one hour less than EST 
     return today
 
+# Today's Date in YYYY-MM-DD format
 def date_today():
     return f'{time.localtime(tz())[0]}-{time.localtime(tz())[1]:02}-{time.localtime(tz())[2]:02}'
 
@@ -74,8 +66,11 @@ def date_today():
 def timestamp():
     return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
 
-raw_data = download()
 
-#r.json()
-#r.json()['isNextDay']
-#r.json()['hourlyPriceDetails'][0]
+############################################
+# Initialize JSON Data
+############################################
+
+raw_data = download()  # Access from main.py with psp.raw_data
+
+
