@@ -64,11 +64,11 @@ def parse():
 def date_today():
     today = time.localtime(tz())
     tomorrow = time.localtime(tz()+86400)
-    # CST/EST data for today
-    if not tz(format='bool') and today[3] != 23:
+    # CDT/EST data or CST/EST data but not 11PM
+    if tz(format='bool') or (not tz(format='bool') and today[3] != 23):
         return f'{today[0]}-{today[1]:02}-{today[2]:02}'
-    # CST/EST Hour 23 is in tomorrow's data (hour -1)
-    elif not tz(format='bool') and today[3] != 23:
+    # CST/EST Hour 23 (11PM) is in tomorrow's data (hour -1)
+    elif (not tz(format='bool')) and (today[3] == 23):
         return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
     else:
         print("Something went wrong with the date_today() function...")
