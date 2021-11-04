@@ -90,8 +90,8 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-import psp_html as psp
-#import psp_json as psp
+#import psp_html as psp
+import psp_json as psp
 #import psp_csv as psp
 
 
@@ -142,21 +142,13 @@ def power(max=0.07):
         led('yellow')
         transmit('off')
 
-# Align time.localtime midnight (0) to psp-data midnight (24)
-# (keep in mind that Hour 24 is midnight for the next day which is why new data is downloaded at 1AM)
-def midnight_fix():
-    if time.localtime(tz())[3] == 0 and tz(format='bool'):  # Set CDT Midnight to Hour 24
-        hour = 24
+# Align time.localtime 11PM CST (23) to psp-data hour -1 
+def elevenPM_fix():
+    if not tz(format='bool') and time.localtime(tz())[3] == 23:  # Set to Hour -1
+        hour = -1
     else:
         hour = time.localtime(tz())[3]
     return hour
-
-# Download new data at 1AM
-def is_1AM():
-    if time.localtime(tz())[3] == 1:
-        return True
-    else:
-        return False
 
 # Only turn Power ON/OFF at the top of each hour
 def is_top_of_hour():
@@ -195,7 +187,7 @@ psp.check_date()                        # Verify data in psp-data is for today
 today = psp.parse()                     # Parse Table in psp-data into dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-hour = midnight_fix()                   # Align time.localtime (0) and psp-data (24) midnight hours
+hour = elevenPM_fix()                   # Align time.localtime (23) and psp-data (-1) 11PM hours
 power()                                 # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
@@ -206,9 +198,7 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 
 while True:
     if is_top_of_hour():
-        if is_1AM():
-            psp.check_date()  # At 1:00AM download new data, reboot, and re-initialize variables
-        hour = midnight_fix() 
+        hour = elevenPM_fix() 
         power()
         time.sleep(65) 
     else:

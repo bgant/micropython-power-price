@@ -59,9 +59,9 @@ def parse():
         price = re.search('<td id="Price">(.*?)</td>', line)
         if hour is not None:  # <tr>, </tr>, or blank lines
             if tz(format='bool'):
-                today[int(hour.group(1))] = float(price.group(1))    # CDT is the same as EST (UTC -5)
+                today[int(hour.group(1))-1] = float(price.group(1))  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
             else:
-                today[int(hour.group(1))-1] = float(price.group(1))  # CST is one hour less than EST 
+                today[int(hour.group(1))-2] = float(price.group(1))  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
     #print(f"Hour and Price data from today's {filename} file:")
     #print(today)
     return today

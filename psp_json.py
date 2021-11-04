@@ -46,6 +46,8 @@ def check_date():
         exit()
 
 # Parse JSON data
+#    NOTES: Hours are in Eastern Standard Time (UTC -5)
+#           HE in the original MISO data stands for "Hour Ending", so "HE 8" is from 7AM-8AM
 def parse():
     global raw_data
     today = {}
@@ -53,14 +55,24 @@ def parse():
         hour = raw_data['hourlyPriceDetails'][n]['hour']
         price = raw_data['hourlyPriceDetails'][n]['price']
         if tz(format='bool'):
-            today[int(hour)] = float(price)    # CDT is the same as EST (UTC -5)
+            today[int(hour)-1] = float(price)  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
         else:
-            today[int(hour)-1] = float(price)  # CST is one hour less than EST 
+            today[int(hour)-2] = float(price)  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
     return today
 
 # Today's Date in YYYY-MM-DD format
 def date_today():
-    return f'{time.localtime(tz())[0]}-{time.localtime(tz())[1]:02}-{time.localtime(tz())[2]:02}'
+    today = time.localtime(tz())
+    tomorrow = time.localtime(tz()+86400)
+    # CST/EST data for today
+    if not tz(format='bool') and today[3] != 23:
+        return f'{today[0]}-{today[1]:02}-{today[2]:02}'
+    # CST/EST Hour 23 is in tomorrow's data (hour -1)
+    elif not tz(format='bool') and today[3] != 23:
+        return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
+    else:
+        print("Something went wrong with the date_today() function...")
+        exit()
 
 # Timestamp for debugging
 def timestamp():
