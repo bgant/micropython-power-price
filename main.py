@@ -207,7 +207,7 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 while True:
     if is_top_of_hour():
         if is_1AM():
-            check_date()  # At 1:00AM download new data, reboot, and re-initialize variables
+            psp.check_date()  # At 1:00AM download new data, reboot, and re-initialize variables
         hour = midnight_fix() 
         power()
         time.sleep(65) 
