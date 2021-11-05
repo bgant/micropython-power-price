@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-01
+Updated: 2021-11-05
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -90,9 +90,9 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-#import psp_html as psp
-import psp_json as psp
-#import psp_csv as psp
+import psp_json as psp  # Best API
+#import psp_csv as psp  # Download data from the MISO source
+#import psp_html as psp # No specified date / Tomorrow's data after 4:30PM
 
 
 ############################################
@@ -105,7 +105,6 @@ def price_average(price_data):
     for hour in price_data:
         average += float(price_data[hour])
     average /= len(price_data)  # Price easily affected by high/low outliers
-    #print(f'Average Price Today: {average:.3f}')
     return average
 
 # Update weekly Price average data to disk
@@ -154,7 +153,7 @@ def hour_now():
 
 # Only turn Power ON/OFF at the top of each hour
 def is_top_of_hour():
-    if time.localtime()[4] == 0:  # Minute 00 / No need for lftime CST/CDT hours
+    if time.localtime()[4] == 0:  # Minute 00 in any timezone
         return True
     else:
         return False
@@ -165,9 +164,11 @@ def timestamp():
 
 def led(color):
     if color == 'yellow':
-        TinyPICO_RGB.solid(155,155,0)
+        TinyPICO_RGB.solid(100,100,0)
     elif color == 'green':
-        TinyPICO_RGB.solid(0,155,0)
+        TinyPICO_RGB.solid(0,100,0)
+    elif color == 'red':
+        TinyPICO_RGB.solid(100,0,0)
     else:
         TinyPICO_RGB.off()
 
@@ -193,7 +194,6 @@ try:
     transmit = TX(pin(), '433MHz_Dewenwils_RC-042_E211835.json')
 except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
-    print()
     exit()
 
 raw_data = psp.download(date())         # Download the data on boot
@@ -216,6 +216,5 @@ while True:
         power(price_data, hour_now())
         time.sleep(65) 
     else:
-        #print('sleep')
         time.sleep(30)
 
