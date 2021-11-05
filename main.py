@@ -196,9 +196,9 @@ except:
     print()
     exit()
 
-raw_data = psp.download(date())         # Download the latest data on boot
+raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
-weekly_average_write(price_data)        # Write Today's Average Price to Key Store
+weekly_average_write(price_data)        # Write Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
 power(price_data, hour_now())           # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
