@@ -21,10 +21,9 @@ import urequests
 # Download Power Smart Pricing data in CSV Format from MISO
 def download(date):
     url = f"https://docs.misoenergy.org/marketreports/{date.replace('-','')}_da_expost_lmp.csv"
-    headers = {'User-Agent': 'https://github.com/bgant/micropython-power-price'}
+    headers = {'Range': 'bytes=0-40000', 'User-Agent': 'https://github.com/bgant/micropython-power-price'}
     response = urequests.get(url, headers=headers)
-    print(f'{timestamp()} New MISO CSV data downloaded...Converting large CSV to string variable raw_data...')
-    raw_data = str(response.content)
+    raw_data = str(response.content)  # Only downloaded the bytes Range needed to reducing processing time
     response.close()
     lines = raw_data.split('\\n')
     for line in lines:
@@ -34,6 +33,7 @@ def download(date):
             if 'Loadzone' in line:
                 if 'LMP' in line:
                     csv = line 
+    print(f'{timestamp()} New MISO CSV data downloaded...')
     return f'{date},{csv}'
 
 # Parse MISO CSV Data
@@ -54,7 +54,7 @@ def date_match(raw_data, date):
     items = raw_data.split(',')
     csv_date = items[0]
     csv_date = csv_date.split('/')
-    csv_date = f'{csv_date[2]}-{csv_date[1]}-{csv_date[0]}'
+    csv_date = f'{csv_date[2]}-{csv_date[0]}-{csv_date[1]}'
     if csv_date == date:
         return True
     else:
