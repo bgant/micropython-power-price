@@ -102,9 +102,9 @@ import psp_json as psp
 # Calculate Average Price for Today
 def price_average():
     average = 0.0
-    for hour in today:
-        average += float(today[hour])
-    average /= len(today)  # Price easily affected by high/low outliers
+    for hour in price_data:
+        average += float(price_data[hour])
+    average /= len(price_data)  # Price easily affected by high/low outliers
     #print(f'Average Price Today: {average:.3f}')
     return average
 
@@ -130,24 +130,24 @@ def weekly_average_read():
     price /= len(weekly_averages)
     return price
 
-# Turn 433MHz Power Relay ON/OFF
-def power(max=0.07):
-    #if today[hour] < average and today[hour] < median and today[hour] < max:
-    if today[hour] < weekly_average and today[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
-        led('green')
-        transmit('on')
-    else:
-        print(f'{timestamp()} Hour {hour:02} Price {today[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
-        led('yellow')
-        transmit('off')
-
+# Align CST/CDT hours with EST price_data hours
 def hour_now():
     if (not isDST()) and time.localtime(tz())[3] == 23:  # Set to Hour -1
         hour = -1
     else:
         hour = time.localtime(tz())[3]
     return hour
+
+# Turn 433MHz Power Relay ON/OFF
+def power(hour, max=0.07):
+    if price_data[hour] < weekly_average and price_data[hour] < max:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
+        led('green')
+        transmit('on')
+    else:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
+        led('yellow')
+        transmit('off')
 
 # Only turn Power ON/OFF at the top of each hour
 def is_top_of_hour():
@@ -182,12 +182,11 @@ except:
     print()
     exit()
 
-psp.check_date()                        # Verify data in psp-data is for today
-today = psp.parse()                     # Parse Table in psp-data into dictionary
+psp.check_date()                        # Verify data in psp-data is for correct date
+price_data = psp.parse()                # Parse Table in psp-data into dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-hour = hour_now()                       # Align time.localtime (23) and psp-data (-1) 11PM hours
-power()                                 # Turn Power ON/OFF Based on Current Hour Price
+power(hour_now())                       # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
 
@@ -198,9 +197,8 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 while True:
     if is_top_of_hour():
         psp.check_date()
-        today = psp.parse()
-        hour = hour_now() 
-        power()
+        price_data = psp.parse()
+        power(hour_now())
         time.sleep(65) 
     else:
         #print('sleep')
