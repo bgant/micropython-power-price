@@ -172,7 +172,7 @@ def led(color):
         TinyPICO_RGB.off()
 
 # Turn 433MHz Power Relay ON/OFF
-def power(price_data, hour, max=0.07):
+def power(price_data, hour, max=0.09):
     if price_data[hour] < weekly_average and price_data[hour] < max:
         print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
         led('green')
