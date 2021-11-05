@@ -139,7 +139,7 @@ def hour_now():
     return hour
 
 # Turn 433MHz Power Relay ON/OFF
-def power(hour, max=0.07):
+def power(price_data, hour, max=0.07):
     if price_data[hour] < weekly_average and price_data[hour] < max:
         print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
         led('green')
@@ -155,6 +155,20 @@ def is_top_of_hour():
         return True
     else:
         return False
+
+# Date in YYYY-MM-DD format
+def date():
+    today = time.localtime(tz())
+    tomorrow = time.localtime(tz()+86400)
+    # CDT/EST data or CST/EST data but not 11PM
+    if isDST() or (not isDST() and today[3] != 23):
+        return f'{today[0]}-{today[1]:02}-{today[2]:02}'
+    # CST/EST Hour 23 (11PM) is in tomorrow's data (hour -1)
+    elif (not isDST()) and (today[3] == 23):
+        return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
+    else:
+        print("Something went wrong with the date_today() function...")
+        exit()
 
 # Timestamp for debugging
 def timestamp():
@@ -182,11 +196,11 @@ except:
     print()
     exit()
 
-psp.check_date()                        # Verify data in psp-data is for correct date
-price_data = psp.parse()                # Parse Table in psp-data into dictionary
+raw_data = psp.download(date())         # Download the latest data on boot
+price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-power(hour_now())                       # Turn Power ON/OFF Based on Current Hour Price
+power(price_data, hour_now())           # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
 
@@ -196,9 +210,10 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 
 while True:
     if is_top_of_hour():
-        psp.check_date()
-        price_data = psp.parse()
-        power(hour_now())
+        if not psp.date_match(raw_data, date()):
+            raw_data = psp.download(date())
+        price_data = psp.parse(raw_data)
+        power(price_data, hour_now())
         time.sleep(65) 
     else:
         #print('sleep')
