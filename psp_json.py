@@ -9,7 +9,7 @@ from machine import reset
 from sys import exit
 
 # Downloaded Micropython Modules
-from timezone import tz
+from timezone import tz, isDST
 import urequests
 
 
@@ -25,7 +25,7 @@ def download():
     response = urequests.post(url, headers=headers, json=date)
     if response.status_code is 200:
         data = response.json()
-        print(f'{timestamp()} New JSON data downloaded... Waiting one minute before continuing...')
+        print(f'{timestamp()} New {date_today()} JSON data downloaded... Waiting one minute before continuing...')
     else:
         print(f'{timestamp()} Download failed with HTTP Status Code {response.status_code}... Not sure what to do...')
     response.close()
@@ -38,12 +38,6 @@ def check_date():
     date_json = raw_data['hourlyPriceDetails'][0]['date'].strip('T00:00:00')   # YYYY-MM-DD
     if date_json != date_today():
         raw_data = download()
-        reset()
-    elif date_json == date_today():
-        print(f"{timestamp()} JSON data today's date ({date_today()})")
-    else:
-        print(f'{timestamp()} Something went wrong... Exiting...')
-        exit()
 
 # Parse JSON data
 #    NOTES: Hours are in Eastern Standard Time (UTC -5)
@@ -54,7 +48,7 @@ def parse():
     for n in range(0,24):
         hour = raw_data['hourlyPriceDetails'][n]['hour']
         price = raw_data['hourlyPriceDetails'][n]['price']
-        if tz(format='bool'):
+        if isDST():
             today[int(hour)-1] = float(price)  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
         else:
             today[int(hour)-2] = float(price)  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
@@ -65,10 +59,10 @@ def date_today():
     today = time.localtime(tz())
     tomorrow = time.localtime(tz()+86400)
     # CDT/EST data or CST/EST data but not 11PM
-    if tz(format='bool') or (not tz(format='bool') and today[3] != 23):
+    if isDST() or (not isDST() and today[3] != 23):
         return f'{today[0]}-{today[1]:02}-{today[2]:02}'
     # CST/EST Hour 23 (11PM) is in tomorrow's data (hour -1)
-    elif (not tz(format='bool')) and (today[3] == 23):
+    elif (not isDST()) and (today[3] == 23):
         return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
     else:
         print("Something went wrong with the date_today() function...")

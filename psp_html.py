@@ -10,7 +10,7 @@ from machine import reset
 from sys import exit
 
 # Downloaded Micropython Modules
-from timezone import tz
+from timezone import tz, isDST
 import urequests
 
 
@@ -30,9 +30,9 @@ def download():
     print(response.content, file=psp_file)
     psp_file.close()
     response.close()
-    print(f'{timestamp()} New {filename} file written to disk... Rebooting in one minute...')
+    print(f'{timestamp()} New {filename} file written to disk... Waiting for one minute...')
     time.sleep(65)
-    reset()
+    #reset()
 
 # Check that html data is for today
 def check_date():
@@ -42,11 +42,11 @@ def check_date():
         exit()
     elif psp_file_day.group(1) != date_today():
         download()
-    elif psp_file_day.group(1) == date_today():
-        print(f"{timestamp()} {filename} file is on disk and matches today's date ({psp_file_day.group(1)})")
-    else:
-        print(f'{timestamp()} Something went wrong... Exiting...')
-        exit()
+    #elif psp_file_day.group(1) == date_today():
+    #    print(f"{timestamp()} {filename} file is on disk and matches today's date ({psp_file_day.group(1)})")
+    #else:
+    #    print(f'{timestamp()} Something went wrong... Exiting...')
+    #    exit()
 
 # Parse HTML for table data
 def parse():
@@ -58,7 +58,7 @@ def parse():
         hour = re.search('<td id="Hour">(.*?)</td>', line)
         price = re.search('<td id="Price">(.*?)</td>', line)
         if hour is not None:  # <tr>, </tr>, or blank lines
-            if tz(format='bool'):
+            if isDST():
                 today[int(hour.group(1))-1] = float(price.group(1))  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
             else:
                 today[int(hour.group(1))-2] = float(price.group(1))  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
@@ -71,10 +71,10 @@ def date_today():
     today = time.localtime(tz())
     tomorrow = time.localtime(tz()+86400)
     # CDT/EST data or CST/EST data but not 11PM
-    if tz(format='bool') or (not tz(format='bool') and today[3] != 23):
+    if isDST() or (not isDST() and today[3] != 23):
         return f'{today[0]}-{today[1]:02}-{today[2]:02}'
     # CST/EST Hour 23 (11PM) is in tomorrow's data (hour -1)
-    elif (not tz(format='bool')) and (today[3] == 23):
+    elif (not isDST()) and (today[3] == 23):
         return f'{tomorrow[0]}-{tomorrow[1]:02}-{tomorrow[2]:02}'
     else:
         print("Something went wrong with the date_today() function...")

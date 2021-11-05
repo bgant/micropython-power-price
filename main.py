@@ -84,7 +84,7 @@ print()
 time.sleep(2) 
 
 # Downloaded Micropython Modules
-from timezone import tz
+from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
 import TinyPICO_RGB
@@ -142,9 +142,8 @@ def power(max=0.07):
         led('yellow')
         transmit('off')
 
-# Align time.localtime 11PM CST (23) to psp-data hour -1 
-def elevenPM_fix():
-    if not tz(format='bool') and time.localtime(tz())[3] == 23:  # Set to Hour -1
+def hour_now():
+    if (not isDST()) and time.localtime(tz())[3] == 23:  # Set to Hour -1
         hour = -1
     else:
         hour = time.localtime(tz())[3]
@@ -187,7 +186,7 @@ psp.check_date()                        # Verify data in psp-data is for today
 today = psp.parse()                     # Parse Table in psp-data into dictionary
 weekly_average_write()                  # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-hour = elevenPM_fix()                   # Align time.localtime (23) and psp-data (-1) 11PM hours
+hour = hour_now()                       # Align time.localtime (23) and psp-data (-1) 11PM hours
 power()                                 # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
@@ -198,7 +197,9 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 
 while True:
     if is_top_of_hour():
-        hour = elevenPM_fix() 
+        psp.check_date()
+        today = psp.parse()
+        hour = hour_now() 
         power()
         time.sleep(65) 
     else:
