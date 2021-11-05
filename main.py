@@ -90,8 +90,8 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-import psp_html as psp
-#import psp_json as psp
+#import psp_html as psp
+import psp_json as psp
 #import psp_csv as psp
 
 
