@@ -46,7 +46,7 @@ def parse(raw_data):
             price_data[int(hour)-2] = float(price)  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
     return price_data
 
-# Check that JSON data is for today
+# Are we using the correct data for this hour
 def date_match(raw_data, date):
     date_json = raw_data['hourlyPriceDetails'][0]['date'].strip('T00:00:00')   # YYYY-MM-DD
     if date_json == date:

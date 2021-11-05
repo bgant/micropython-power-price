@@ -90,8 +90,8 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-#import psp_html as psp
-import psp_json as psp
+import psp_html as psp
+#import psp_json as psp
 #import psp_csv as psp
 
 
@@ -130,12 +130,12 @@ def weekly_average_read():
     price /= len(weekly_averages)
     return price
 
-# Align CST/CDT hours with EST price_data hours
+# Align CST/CDT hours with price_data hours
 def hour_now():
-    if (not isDST()) and time.localtime(tz())[3] == 23:  # Set to Hour -1
-        hour = -1
+    if (not isDST()) and time.localtime(tz())[3] == 23: 
+        hour = -1  # Set 11PM CST to Hour -1 in price_data
     else:
-        hour = time.localtime(tz())[3]
+        hour = time.localtime(tz())[3]  # All other CST/CDT hours line up with price_data
     return hour
 
 # Turn 433MHz Power Relay ON/OFF
