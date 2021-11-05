@@ -100,7 +100,7 @@ import psp_html as psp
 ############################################
 
 # Calculate Average Price for Today
-def price_average():
+def price_average(price_data):
     average = 0.0
     for hour in price_data:
         average += float(price_data[hour])
@@ -109,15 +109,15 @@ def price_average():
     return average
 
 # Update weekly Price average data to disk
-def weekly_average_write():
+def weekly_average_write(price_data):
     try:
         weekly_averages = key_store.get('weekly_averages')
         weekly_averages = json.loads(weekly_averages)
-        weekly_averages[time.localtime(tz())[6]] = price_average()  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = price_average(price_data)  # Add Today's Average Price
     except:
         # Initialize variable if not in Key Store data
         weekly_averages = {}
-        weekly_averages[time.localtime(tz())[6]] = price_average()  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = price_average(price_data)  # Add Today's Average Price
     key_store.set('weekly_averages', str(weekly_averages))
 
 # Read weekly Price data from disk
@@ -129,32 +129,6 @@ def weekly_average_read():
         price += weekly_averages[day]
     price /= len(weekly_averages)
     return price
-
-# Align CST/CDT hours with price_data hours
-def hour_now():
-    if (not isDST()) and time.localtime(tz())[3] == 23: 
-        hour = -1  # Set 11PM CST to Hour -1 in price_data
-    else:
-        hour = time.localtime(tz())[3]  # All other CST/CDT hours line up with price_data
-    return hour
-
-# Turn 433MHz Power Relay ON/OFF
-def power(price_data, hour, max=0.07):
-    if price_data[hour] < weekly_average and price_data[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
-        led('green')
-        transmit('on')
-    else:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
-        led('yellow')
-        transmit('off')
-
-# Only turn Power ON/OFF at the top of each hour
-def is_top_of_hour():
-    if time.localtime()[4] == 0:  # Minute 00 / No need for lftime CST/CDT hours
-        return True
-    else:
-        return False
 
 # Date in YYYY-MM-DD format
 def date():
@@ -170,6 +144,21 @@ def date():
         print("Something went wrong with the date_today() function...")
         exit()
 
+# Align CST/CDT hours with price_data hours
+def hour_now():
+    if (not isDST()) and time.localtime(tz())[3] == 23:
+        hour = -1  # Set 11PM CST to Hour -1 in price_data
+    else:
+        hour = time.localtime(tz())[3]  # All other CST/CDT hours line up with price_data
+    return hour
+
+# Only turn Power ON/OFF at the top of each hour
+def is_top_of_hour():
+    if time.localtime()[4] == 0:  # Minute 00 / No need for lftime CST/CDT hours
+        return True
+    else:
+        return False
+
 # Timestamp for debugging
 def timestamp():
     return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
@@ -181,6 +170,17 @@ def led(color):
         TinyPICO_RGB.solid(0,155,0)
     else:
         TinyPICO_RGB.off()
+
+# Turn 433MHz Power Relay ON/OFF
+def power(price_data, hour, max=0.07):
+    if price_data[hour] < weekly_average and price_data[hour] < max:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
+        led('green')
+        transmit('on')
+    else:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
+        led('yellow')
+        transmit('off')
 
 
 ############################################
@@ -198,7 +198,7 @@ except:
 
 raw_data = psp.download(date())         # Download the latest data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
-weekly_average_write()                  # Write Today's Average Price to Key Store
+weekly_average_write(price_data)        # Write Today's Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
 power(price_data, hour_now())           # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
