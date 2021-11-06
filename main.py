@@ -77,6 +77,7 @@ import re
 from machine import reset
 from sys import exit
 import json
+import ntptime
 
 # A chance to hit Ctrl+C in REPL for Debugging
 print('main.py: Press CTRL+C to enter REPL...')
@@ -211,6 +212,7 @@ time.sleep(30)                          # Wait a bit before jumping into While l
 while True:
     if is_top_of_hour():
         if not psp.date_match(raw_data, date()):
+            ntptime.settime() 
             raw_data = psp.download(date())
         price_data = psp.parse(raw_data)
         power(price_data, hour_now())
