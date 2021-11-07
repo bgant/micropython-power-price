@@ -91,9 +91,9 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-import psp_json as psp  # Best API
-#import psp_csv as psp  # Download data from the MISO source
-#import psp_html as psp # No specified date / Tomorrow's data after 4:30PM
+#import psp_json as psp  # Ameren API
+import psp_csv as psp    # Original MISO source
+#import psp_html as psp  # No specified date / Tomorrow's data after 4:30PM
 
 
 ############################################
