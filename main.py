@@ -145,7 +145,7 @@ def date():
         exit()
 
 # Align CST/CDT hours with price_data hours
-def hour_now():
+def price_hour():
     if (not isDST()) and time.localtime(tz())[3] == 23:
         hour = -1  # Set 11PM CST to Hour -1 in price_data
     else:
@@ -201,7 +201,7 @@ raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
 weekly_average_write(price_data)        # Write Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-power(price_data, hour_now())           # Turn Power ON/OFF Based on Current Hour Price
+power(price_data, price_hour())         # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(30)                          # Wait a bit before jumping into While loop
 
 
@@ -215,7 +215,7 @@ while True:
             ntptime.settime() 
             raw_data = psp.download(date())
         price_data = psp.parse(raw_data)
-        power(price_data, hour_now())
+        power(price_data, price_hour())
         time.sleep(65) 
     else:
         time.sleep(30)
