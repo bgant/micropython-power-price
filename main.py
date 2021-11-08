@@ -214,7 +214,9 @@ while True:
         if not psp.date_match(raw_data, date()):
             ntptime.settime() 
             raw_data = psp.download(date())
-        price_data = psp.parse(raw_data)
+            price_data = psp.parse(raw_data)
+            weekly_average_write(price_data)
+            weekly_average = weekly_average_read()
         power(price_data, price_hour())
         time.sleep(65) 
     else:
