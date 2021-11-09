@@ -28,13 +28,13 @@ def download(date):
     lines = raw_data.split('\\n')
     for line in lines:
         if '/' in line:
-            date = line
+            miso_date = line
         elif 'AMIL.BGS5' in line:
             if 'Loadzone' in line:
                 if 'LMP' in line:
                     csv = line 
-    print(f'{timestamp()} New MISO CSV data downloaded...')
-    return f'{date},{csv}'
+    print(f'{timestamp()} New {date} MISO CSV data downloaded...')
+    return f'{miso_date},{csv}'
 
 # Parse MISO CSV Data
 #    NOTES: Hours are in Eastern Standard Time (UTC -5)
