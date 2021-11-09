@@ -5,4 +5,6 @@ Ever since signing up for these rates, I have wanted to create a device that wou
 
 ![Image](images/power.png)
 
-Detailed instructions for setting up an ESP32 or TinyPICO are at the top of the main.py script. Everything is written for Central Daylight Time (CDT) and Central Standar Time (CST).
+Detailed instructions for setting up an ESP32 or TinyPICO with these script are in the top of the main.py script. 
+
+Everything is written for Central Daylight Time (CDT) and Central Standard Time (CST).
