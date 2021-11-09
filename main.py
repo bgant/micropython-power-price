@@ -37,6 +37,9 @@ esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 
 wget https://github.com/micropython/micropython-lib/raw/master/python-ecosys/urequests/urequests.py
 mpremote cp urequests.py :
 
+wget https://github.com/peterhinch/micropython-samples/raw/master/soft_wdt/soft_wdt.py
+mpremote cp soft_wdt.py :
+
 git clone https://github.com/peterhinch/micropython-remote
 cd micropython-remote/
 mpremote cp -r tx/ :
@@ -46,7 +49,6 @@ git clone https://github.com/bgant/micropython-wifi
 cd micropython-wifi/
 mpremote cp key_store.py :
 mpremote cp timezone.py :
-mpremote cp soft_wdt.py :
 mpremote cp TinyPICO_RGB.py :
 mpremote cp boot.py :
 mpremote  <-- to enter REPL
@@ -89,6 +91,8 @@ from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
 import TinyPICO_RGB
+from soft_wdt import wdt_feed, WDT_CANCEL  # Initialize Watchdog Timer
+wdt_feed(300)  # main.py script has 5 minutes to get into main while loop before Watchdog timer resets device
 
 # Choose a single data download mechanism
 #import psp_json as psp  # Ameren API
@@ -222,5 +226,6 @@ while True:
         power(price_data, price_hour())
         time.sleep(65) 
     else:
+        wdt_feed(300)  # 5 minute watchdog reset
         time.sleep(30)
 
