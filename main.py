@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-05
+Updated: 2021-11-09
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
