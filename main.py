@@ -95,9 +95,9 @@ from soft_wdt import wdt_feed, WDT_CANCEL  # Initialize Watchdog Timer
 wdt_feed(300)  # main.py script has 5 minutes to get into main while loop before Watchdog timer resets device
 
 # Choose a single data download mechanism
-#import psp_json as psp  # Ameren API
 import psp_csv as psp    # Original MISO source
-#import psp_html as psp  # No specified date / Tomorrow's data after 4:30PM
+#import psp_json as psp  # Ameren API / No 11PM data during CST
+#import psp_html as psp  # Ameren Website / Tomorrow's data after 4:30PM / No 11PM data during CST
 
 
 ############################################

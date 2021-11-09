@@ -43,7 +43,7 @@ def parse(raw_data):
         if isDST():
             price_data[int(hour)-1] = float(price)  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
         else:
-            price_data[int(hour)-2] = float(price)  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)
+            price_data[int(hour)-1] = float(price)  # -1 for HE / -0 for CST (UTC -6) since Ameren shifts data to one hour less than EST (UTC -5) / No 11PM data during CST
     return price_data
 
 # Are we using the correct data for this hour
