@@ -195,13 +195,13 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
-wdt = WDT(timeout=600000)               # 10-minute ESP32/TinyPICO Hardware Watchdog Timer
+wdt = WDT(timeout=600000)               # 10-minute Hardware Watchdog Timer
 raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
 weekly_average_write(price_data)        # Write Average Price to Key Store
 weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
 power(price_data, price_hour())         # Turn Power ON/OFF Based on Current Hour Price
-time.sleep(30)                          # Wait a bit before jumping into While loop
+time.sleep(65)                          # Wait a bit before jumping into While loop
 
 
 ############################################
