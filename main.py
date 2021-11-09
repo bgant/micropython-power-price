@@ -37,9 +37,6 @@ esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 
 wget https://github.com/micropython/micropython-lib/raw/master/python-ecosys/urequests/urequests.py
 mpremote cp urequests.py :
 
-wget https://github.com/peterhinch/micropython-samples/raw/master/soft_wdt/soft_wdt.py
-mpremote cp soft_wdt.py :
-
 git clone https://github.com/peterhinch/micropython-remote
 cd micropython-remote/
 mpremote cp -r tx/ :
@@ -62,7 +59,7 @@ cd ../
 git clone https://github.com/bgant/micropython-power-price
 cd micropython-power-price/
 mpremote cp 433MHz_Dewenwils_RC-042_E211835.json :
-mpremote cp psp_html.py :   <-- OR psp_json.py OR psp_csv.py
+mpremote cp psp_csv.py :   <-- OR psp_json.py OR psp_html.py 
 mpremote cp main.py :
 
 mpremote  <-- to enter REPL
@@ -74,10 +71,9 @@ reset()   <-- boot.py and main.py should run
 ############################################
 
 # Built-in Micropython Modules
-import time
-import re
-from machine import reset
+from machine import reset, WDT
 from sys import exit
+import time
 import json
 import ntptime
 
@@ -91,8 +87,6 @@ from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
 import TinyPICO_RGB
-from soft_wdt import wdt_feed, WDT_CANCEL  # Initialize Watchdog Timer
-wdt_feed(300)  # main.py script has 5 minutes to get into main while loop before Watchdog timer resets device
 
 # Choose a single data download mechanism
 import psp_csv as psp    # Original MISO source
@@ -201,6 +195,7 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
+wdt = WDT(timeout=600000)               # 10-minute ESP32/TinyPICO Hardware Watchdog Timer
 raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
 weekly_average_write(price_data)        # Write Average Price to Key Store
@@ -226,6 +221,6 @@ while True:
         power(price_data, price_hour())
         time.sleep(65) 
     else:
-        wdt_feed(300)  # 5 minute watchdog reset
+        wdt.feed()  # Reset Hardware Watchdog Timer
         time.sleep(30)
 
