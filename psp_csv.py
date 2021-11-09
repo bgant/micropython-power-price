@@ -39,11 +39,11 @@ def download(date):
 # Parse MISO CSV Data
 #    NOTES: Hours are in Eastern Standard Time (UTC -5)
 #           HE in the original MISO data stands for "Hour Ending", so "HE 8" is from 7AM-8AM
-def parse(raw_data):
+def parse(raw_data, debug_time=None):
     price_data = {}
     items = raw_data.split(',')
     for n in range(0,24):
-        if isDST():
+        if isDST(debug_time):
             price_data[n] = float(items[n+4])/1000  # -1 for HE / -0 for CDT (UTC -5) since it is the same as EST (UTC -5)
         else:
             price_data[n-1] = float(items[n+4])/1000  # -1 for HE / -1 for CST (UTC -6) since it is one hour less than EST (UTC -5)

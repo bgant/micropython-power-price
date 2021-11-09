@@ -182,6 +182,17 @@ def power(price_data, hour, max=0.09):
         led('yellow')
         transmit('off')
 
+def debug(timestamp):
+    t = time.localtime(tz(timestamp))
+    date = f'{t[0]}-{t[1]:02}-{t[2]:02}'
+    print(f'DEBUG BEGIN: Timestamp {timestamp} for {date} isDST={isDST(timestamp)}')
+    raw_data = psp.download(date)
+    price_data = psp.parse(raw_data, debug_time=timestamp)
+    print(price_data)
+    print(f'DEBUG EXIT')
+    print()
+    exit()
+
 
 ############################################
 # Initialize on boot
@@ -195,6 +206,7 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
+#debug(689428800)                       # time.mktime((2021,11,5,12,0,0,0,0)) to get UTC timestamp
 wdt = WDT(timeout=600000)               # 10-minute Hardware Watchdog Timer
 raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
