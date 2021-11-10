@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-09
+Updated: 2021-11-10
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -20,11 +20,11 @@ TinyPICO 3V3 <--> FS1000A VCC
 20Amp 120V Wall Outlet <--> 15Amp 433MHz Dewenwils Relay <--> 12Amp Chevy Volt car charger
 
 ### Software Installation:
-mkdir ~/micropython-build
-cd ~/micropython-build
+mkdir ~/micropython-setup
+cd ~/micropython-setup
 
 python3 -m pip install pyvenv
-python3 -m venv ~/micropython-env
+python3 -m venv micropython-env
 source micropython-env/bin/activate
 python3 -m pip list | egrep -v "Package|----" | awk '{print $1}' | xargs -I {} python3 -m pip install --upgrade {}
 python3 -m pip install esptool
