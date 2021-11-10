@@ -89,7 +89,7 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-import psp_csv as psp    # Original MISO source
+import psp_csv as psp    # Original data from MISO source
 #import psp_json as psp  # Ameren API / No 11PM data during CST
 #import psp_html as psp  # Ameren Website / Tomorrow's data after 4:30PM / No 11PM data during CST
 
@@ -161,6 +161,7 @@ def is_top_of_hour():
 def timestamp():
     return f'[{time.localtime(tz())[3]:02}:{time.localtime(tz())[4]:02}:{time.localtime(tz())[5]:02}]'
 
+# TinyPICO has an RGB LED so let's use it
 def led(color):
     if color == 'yellow':
         TinyPICO_RGB.solid(100,100,0)
@@ -182,6 +183,7 @@ def power(price_data, hour, max=0.09):
         led('yellow')
         transmit('off')
 
+# Test a specific UTC date using a timestamp with psp_csv.py or psp_json.py (NOT psp_html.py) 
 def debug(timestamp):
     t = time.localtime(tz(timestamp))
     date = f'{t[0]}-{t[1]:02}-{t[2]:02}'
@@ -192,6 +194,7 @@ def debug(timestamp):
     print(f'DEBUG EXIT')
     print()
     exit()
+#debug(689428800)  # time.mktime((2021,11,5,12,0,0,0,0)) to get UTC timestamp
 
 
 ############################################
@@ -206,8 +209,7 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
-#debug(689428800)                       # time.mktime((2021,11,5,12,0,0,0,0)) to get UTC timestamp
-wdt = WDT(timeout=600000)               # 10-minute Hardware Watchdog Timer
+wdt = WDT(timeout=600000)               # Set 10-minute Hardware Watchdog Timer
 raw_data = psp.download(date())         # Download the data on boot
 price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
 weekly_average_write(price_data)        # Write Average Price to Key Store
@@ -222,11 +224,14 @@ time.sleep(65)                          # Wait a bit before jumping into While l
 
 while True:
     if is_top_of_hour():
-        if price_hour() == 1:  # 1AM update weekly average data
+        # 1AM update weekly average data
+        if price_hour() == 1:
             weekly_average_write(price_data)
             weekly_average = weekly_average_read()
-        if price_hour() == 22: # 10PM fix clock drift
+        # 10PM fix daily clock drift
+        if price_hour() == 22:
             ntptime.settime()
+        # Download new data if current hour's date does not match data's date
         if not psp.date_match(raw_data, date()):
             raw_data = psp.download(date())
             price_data = psp.parse(raw_data)
