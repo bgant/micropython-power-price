@@ -222,10 +222,10 @@ time.sleep(65)                          # Wait a bit before jumping into While l
 
 while True:
     if is_top_of_hour():
-        if price_hour == 1:  # 1AM update weekly average data
+        if price_hour() == 1:  # 1AM update weekly average data
             weekly_average_write(price_data)
             weekly_average = weekly_average_read()
-        if price_hour == 22: # 10PM fix clock drift
+        if price_hour() == 22: # 10PM fix clock drift
             ntptime.settime()
         if not psp.date_match(raw_data, date()):
             raw_data = psp.download(date())
