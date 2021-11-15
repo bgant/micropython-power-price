@@ -29,6 +29,8 @@ source micropython-env/bin/activate
 python3 -m pip list | egrep -v "Package|----" | awk '{print $1}' | xargs -I {} python3 -m pip install --upgrade {}
 python3 -m pip install esptool
 python3 -m pip install mpremote
+sudo usermod -aG `stat -c "%G" /dev/ttyUSB0` $USER  <-- May need to reboot PC
+mpremote connect /dev/ttyUSB0                       <-- test connection / Ctrl-] to exit
 
 wget https://micropython.org/resources/firmware/tinypico-20210902-v1.17.bin
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
