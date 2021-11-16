@@ -177,11 +177,11 @@ def led(color):
 # Turn 433MHz Power Relay ON/OFF
 def power(price_data, hour, price_cutoff, max=0.09):
     if price_data[hour] < price_cutoff and price_data[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {price_cutoff:.3f} cutoff and {max:.3f} Max... Turning power ON')
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {price_cutoff:.3f} cutoff and/or {max:.3f} Max... Turning power ON')
         led('green')
         transmit('on')
     else:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {price_cutoff:.3f} cutoff  or {max:.3f} Max... Turning power OFF')
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {price_cutoff:.3f} cutoff and/or {max:.3f} Max... Turning power OFF')
         led('yellow')
         transmit('off')
 
