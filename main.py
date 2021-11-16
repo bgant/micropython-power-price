@@ -99,7 +99,7 @@ import psp_csv as psp    # Original data from MISO source
 ############################################
 
 # Calculate Average Price for Today
-def price_average(price_data):
+def daily_average(price_data):
     average = 0.0
     for hour in price_data:
         average += float(price_data[hour])
@@ -111,11 +111,11 @@ def weekly_average_write(price_data):
     try:
         weekly_averages = key_store.get('weekly_averages')
         weekly_averages = json.loads(weekly_averages)
-        weekly_averages[time.localtime(tz())[6]] = price_average(price_data)  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = daily_average(price_data)  # Add Today's Average Price
     except:
         # Initialize variable if not in Key Store data
         weekly_averages = {}
-        weekly_averages[time.localtime(tz())[6]] = price_average(price_data)  # Add Today's Average Price
+        weekly_averages[time.localtime(tz())[6]] = daily_average(price_data)  # Add Today's Average Price
     key_store.set('weekly_averages', str(weekly_averages))
 
 # Read weekly Price data from disk
@@ -173,13 +173,13 @@ def led(color):
         TinyPICO_RGB.off()
 
 # Turn 433MHz Power Relay ON/OFF
-def power(price_data, hour, max=0.09):
-    if price_data[hour] < weekly_average and price_data[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {weekly_average:.3f} Weekly Average and {max:.3f} Max... Turning power ON')
+def power(price_data, hour, price_cutoff, max=0.09):
+    if price_data[hour] < price_cutoff and price_data[hour] < max:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {price_cutoff:.3f} cutoff and {max:.3f} Max... Turning power ON')
         led('green')
         transmit('on')
     else:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {weekly_average:.3f} Weekly Average  or {max:.3f} Max... Turning power OFF')
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {price_cutoff:.3f} cutoff  or {max:.3f} Max... Turning power OFF')
         led('yellow')
         transmit('off')
 
@@ -209,13 +209,16 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
-wdt = WDT(timeout=600000)               # Set 10-minute Hardware Watchdog Timer
-raw_data = psp.download(date())         # Download the data on boot
-price_data = psp.parse(raw_data)        # Parse raw_data into hour:price dictionary
-weekly_average_write(price_data)        # Write Average Price to Key Store
-weekly_average = weekly_average_read()  # Read Weekly list of Average Prices from Key Store
-power(price_data, price_hour())         # Turn Power ON/OFF Based on Current Hour Price
-time.sleep(65)                          # Wait a bit before jumping into While loop
+wdt = WDT(timeout=600000)                     # Set 10-minute Hardware Watchdog Timer
+raw_data = psp.download(date())               # Download the data on boot
+price_data = psp.parse(raw_data)              # Parse raw_data into hour:price dictionary
+
+#weekly_average_write(price_data)             # Write Average Price to Key Store
+#price_cutoff = weekly_average_read()         # Use Weekly Average Price from Key Store
+price_cutoff = daily_average(price_data)      # Use Daily Average Price 
+
+power(price_data, price_hour(), price_cutoff) # Turn Power ON/OFF Based on Current Hour Price
+time.sleep(65)                                # Wait a bit before jumping into While loop
 
 
 ############################################
@@ -225,9 +228,10 @@ time.sleep(65)                          # Wait a bit before jumping into While l
 while True:
     if is_top_of_hour():
         # 1AM update weekly average data
-        if price_hour() == 1:
-            weekly_average_write(price_data)
-            weekly_average = weekly_average_read()
+        if price_hour() == 0:
+            #weekly_average_write(price_data)
+            #price_cutoff = weekly_average_read()
+            price_cutoff = daily_average(price_data)
         # 10PM fix daily clock drift
         if price_hour() == 22:
             ntptime.settime()
@@ -235,7 +239,7 @@ while True:
         if not psp.date_match(raw_data, date()):
             raw_data = psp.download(date())
             price_data = psp.parse(raw_data)
-        power(price_data, price_hour())
+        power(price_data, price_hour(), price_cutoff)
         time.sleep(65) 
     else:
         wdt.feed()  # Reset Hardware Watchdog Timer
