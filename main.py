@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-10
+Updated: 2021-11-17
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -217,9 +217,9 @@ wdt = WDT(timeout=600000)                     # Set 10-minute Hardware Watchdog 
 raw_data = psp.download(date())               # Download the data on boot
 price_data = psp.parse(raw_data)              # Parse raw_data into hour:price dictionary
 
-weekly_average_write(price_data)             # Write Average Price to Key Store
-#price_cutoff = weekly_average_read()         # Use Weekly Average Price from Key Store
-price_cutoff = daily_average(price_data)      # Use Daily Average Price 
+weekly_average_write(price_data)              # Write Average Price to Key Store
+price_cutoff = weekly_average_read(2)         # Use Weekly Average Price from Key Store
+#price_cutoff = daily_average(price_data)     # Use Daily Average Price 
 
 power(price_data, price_hour(), price_cutoff) # Turn Power ON/OFF Based on Current Hour Price
 time.sleep(65)                                # Wait a bit before jumping into While loop
@@ -234,8 +234,8 @@ while True:
         # 1AM update weekly average data
         if price_hour() == 0:
             weekly_average_write(price_data)
-            #price_cutoff = weekly_average_read()
-            price_cutoff = daily_average(price_data)
+            price_cutoff = weekly_average_read(2)
+            #price_cutoff = daily_average(price_data)
         # 10PM fix daily clock drift
         if price_hour() == 22:
             ntptime.settime()
