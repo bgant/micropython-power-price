@@ -19,7 +19,7 @@ TinyPICO  23 <--> FS1000A Data (middle pin)
 TinyPICO 3V3 <--> FS1000A VCC 
 20Amp 120V Wall Outlet <--> 15Amp 433MHz Dewenwils Relay <--> 12Amp Chevy Volt car charger
 
-### Software Installation:
+### Software Installation on Linux:
 mkdir ~/micropython-setup
 cd ~/micropython-setup
 
@@ -108,7 +108,7 @@ def daily_average(price_data):
     average /= len(price_data)  # Price easily affected by high/low outliers
     return average
 
-# Update weekly Price average data to disk
+# Update weekly_averages dictionary to key_store.db
 def weekly_average_write(price_data):
     try:
         weekly_averages = key_store.get('weekly_averages')
@@ -120,14 +120,16 @@ def weekly_average_write(price_data):
         weekly_averages[time.localtime(tz())[6]] = daily_average(price_data)  # Add Today's Average Price
     key_store.set('weekly_averages', str(weekly_averages))
 
-# Read weekly Price data from disk
-def weekly_average_read():
+# Read weekly_averages dictionary from key_store.db and average
+# the prices across X number of days where X is 1 to 7 days
+def weekly_average_read(days=7):
     weekly_averages = key_store.get('weekly_averages')    
     weekly_averages = json.loads(weekly_averages)
     price = 0.0
-    for day in weekly_averages:
-        price += weekly_averages[day]
-    price /= len(weekly_averages)
+    for n in range(0, days):
+        if n == days: break
+        price += weekly_averages[(time.localtime(tz())[6]-n)%7]
+    price /= days
     return price
 
 # Date in YYYY-MM-DD format
