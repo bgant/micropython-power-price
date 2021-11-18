@@ -1,7 +1,7 @@
 
-############################################
+#-----------------
 # Import Modules
-############################################
+#-----------------
 
 # Built-in Micropython Modules
 import time
@@ -13,9 +13,9 @@ from timezone import tz, isDST
 import urequests
 
 
-############################################
+#-------------------
 # Define Functions
-############################################
+#-------------------
 
 # Download Power Smart Pricing data in JSON via API
 def download(date):
