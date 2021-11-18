@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-17
+Updated: 2021-11-18
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -68,9 +68,9 @@ mpremote  <-- to enter REPL
 reset()   <-- boot.py and main.py should run
 '''
 
-############################################
+#-----------------
 # Import Modules
-############################################
+#-----------------
 
 # Built-in Micropython Modules
 from machine import reset, WDT
@@ -96,9 +96,9 @@ import psp_csv as psp    # Original data from MISO source
 #import psp_html as psp  # Ameren Website / Tomorrow's data after 4:30PM / No 11PM data during CST
 
 
-############################################
+#-------------------
 # Define Functions
-############################################
+#-------------------
 
 # Calculate Average Price for Today
 def daily_average(price_data):
@@ -201,9 +201,9 @@ def debug(timestamp):
 #debug(689428800)  # time.mktime((2021,11,5,12,0,0,0,0)) to get UTC timestamp
 
 
-############################################
+#---------------------
 # Initialize on boot
-############################################
+#---------------------
 
 # Load file containing 433MHz transmit codes
 # Source: https://github.com/peterhinch/micropython_remote
@@ -225,9 +225,9 @@ power(price_data, price_hour(), price_cutoff) # Turn Power ON/OFF Based on Curre
 time.sleep(65)                                # Wait a bit before jumping into While loop
 
 
-############################################
+#------------
 # Main Loop
-############################################
+#------------
 
 while True:
     if is_top_of_hour():
