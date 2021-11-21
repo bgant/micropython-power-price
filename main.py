@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-18
+Updated: 2021-11-21
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -68,6 +68,28 @@ mpremote  <-- to enter REPL
 reset()   <-- boot.py and main.py should run
 '''
 
+
+#-----------------------
+# Script Configuration
+#-----------------------
+
+# How do you want to download data? [CSV, JSON, HTML]
+download = 'CSV'
+
+# How many Daily Price Averages do you want to use? [1-7]
+days = 1
+
+# What is the Minimum Price that power should always be turned on?
+min = 0.04
+
+# What is the Maximum Price that power should always be turned off?
+max = 0.09
+
+# By default, power is turned off if the Price is higher than the Average (50%).
+# Do you want to cutoff the power at a higher or lower Percentage? [0-100]
+percent = 60
+
+
 #-----------------
 # Import Modules
 #-----------------
@@ -91,9 +113,15 @@ from tx.get_pin import pin
 import TinyPICO_RGB
 
 # Choose a single data download mechanism
-import psp_csv as psp    # Original data from MISO source
-#import psp_json as psp  # Ameren API / No 11PM data during CST
-#import psp_html as psp  # Ameren Website / Tomorrow's data after 4:30PM / No 11PM data during CST
+if download.lower() is 'csv':
+    import psp_csv as psp    # Original data from MISO source
+elif download.lower() is 'json':
+    import psp_json as psp  # Ameren API / No 11PM data during CST
+elif download.lower() is 'html':
+    import psp_html as psp  # Ameren Website / Tomorrow's data after 4:30PM / No 11PM data during CST
+else:
+    print(f'{download} is not a valid download mechanism... Exiting')
+    exit()
 
 
 #-------------------
@@ -101,13 +129,12 @@ import psp_csv as psp    # Original data from MISO source
 #-------------------
 
 # Calculate Average Price for Today
-def daily_average(price_data, percentage=50):
+def daily_average(price_data):
     average = 0.0
     for hour in price_data:
         average += float(price_data[hour])
     average /= len(price_data)  # Price easily affected by high/low outliers
-    average_with_percentage = (average * ((percentage - 50)/100)) + average
-    return average_with_percentage
+    return average
 
 # Update weekly_averages dictionary to key_store.db
 def weekly_average_write(price_data):
@@ -123,7 +150,7 @@ def weekly_average_write(price_data):
 
 # Read weekly_averages dictionary from key_store.db and average
 # the prices across X number of days where X is 1 to 7 days
-def weekly_average_read(days=7):
+def weekly_average_read(days=7, percentage=50):
     weekly_averages = key_store.get('weekly_averages')    
     weekly_averages = json.loads(weekly_averages)
     price = 0.0
@@ -131,7 +158,8 @@ def weekly_average_read(days=7):
         if n == days: break
         price += weekly_averages[(time.localtime(tz())[6]-n)%7]
     price /= days
-    return price
+    price_with_percentage = (price * ((percentage - 50)/100)) + price
+    return price_with_percentage
 
 # Date in YYYY-MM-DD format
 def date():
@@ -218,16 +246,15 @@ except:
     print('JSON File containing 433MHz codes is missing... Exiting...')
     exit()
 
-wdt = WDT(timeout=600000)                     # Set 10-minute Hardware Watchdog Timer
-raw_data = psp.download(date())               # Download the data on boot
-price_data = psp.parse(raw_data)              # Parse raw_data into hour:price dictionary
+wdt = WDT(timeout=600000)                         # Set 10-minute Hardware Watchdog Timer
+raw_data = psp.download(date())                   # Download the data on boot
+price_data = psp.parse(raw_data)                  # Parse raw_data into hour:price dictionary
 
-weekly_average_write(price_data)              # Write Average Price to Key Store
-price_cutoff = weekly_average_read(1)         # Use Weekly Average Price from Key Store
-#price_cutoff = daily_average(price_data)     # Use Daily Average Price 
+weekly_average_write(price_data)                  # Write Average Price to Key Store
+price_cutoff = weekly_average_read(days, percent) # Use Weekly Average Price from Key Store
 
-power(price_data, price_hour(), price_cutoff) # Turn Power ON/OFF Based on Current Hour Price
-time.sleep(65)                                # Wait a bit before jumping into While loop
+power(price_data, price_hour(), price_cutoff)     # Turn Power ON/OFF Based on Current Hour Price
+time.sleep(65)                                    # Wait a bit before jumping into While loop
 
 
 #------------
@@ -239,8 +266,7 @@ while True:
         # 1AM update weekly average data
         if price_hour() == 0:
             weekly_average_write(price_data)
-            price_cutoff = weekly_average_read(1)
-            #price_cutoff = daily_average(price_data)
+            price_cutoff = weekly_average_read(days, percent)
         # 10PM fix daily clock drift
         if price_hour() == 22:
             ntptime.settime()
