@@ -101,12 +101,13 @@ import psp_csv as psp    # Original data from MISO source
 ############################################
 
 # Calculate Average Price for Today
-def daily_average(price_data):
+def daily_average(price_data, percentage=50):
     average = 0.0
     for hour in price_data:
         average += float(price_data[hour])
     average /= len(price_data)  # Price easily affected by high/low outliers
-    return average
+    average_with_percentage = (average * ((percentage - 50)/100)) + average
+    return average_with_percentage
 
 # Update weekly_averages dictionary to key_store.db
 def weekly_average_write(price_data):
@@ -177,14 +178,18 @@ def led(color):
         TinyPICO_RGB.off()
 
 # Turn 433MHz Power Relay ON/OFF
-def power(price_data, hour, price_cutoff, max=0.09):
-    if price_data[hour] < price_cutoff and price_data[hour] < max:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {price_cutoff:.3f} cutoff and/or {max:.3f} Max... Turning power ON')
+def power(price_data, hour, price_cutoff, min=0.04, max=0.09):
+    if price_data[hour] < min or price_data[hour] < price_cutoff:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {min:.3f} minimum or {price_cutoff:.3f} cutoff... Turning power ON')
         led('green')
         transmit('on')
+    elif price_data[hour] > max or price_data[hour] > price_cutoff:
+        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {max:.3f} maximum or {price_cutoff:.3f} cutoff... Turning power OFF')
+        led('red')
+        transmit('off')
     else:
-        print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {price_cutoff:.3f} cutoff and/or {max:.3f} Max... Turning power OFF')
-        led('yellow')
+        print(f'Not sure what happened with price {price_data[hour]}')
+        led('off')
         transmit('off')
 
 # Test a specific UTC date using a timestamp with psp_csv.py or psp_json.py (NOT psp_html.py) 
@@ -218,7 +223,7 @@ raw_data = psp.download(date())               # Download the data on boot
 price_data = psp.parse(raw_data)              # Parse raw_data into hour:price dictionary
 
 weekly_average_write(price_data)              # Write Average Price to Key Store
-price_cutoff = weekly_average_read(2)         # Use Weekly Average Price from Key Store
+price_cutoff = weekly_average_read(1)         # Use Weekly Average Price from Key Store
 #price_cutoff = daily_average(price_data)     # Use Daily Average Price 
 
 power(price_data, price_hour(), price_cutoff) # Turn Power ON/OFF Based on Current Hour Price
@@ -234,7 +239,7 @@ while True:
         # 1AM update weekly average data
         if price_hour() == 0:
             weekly_average_write(price_data)
-            price_cutoff = weekly_average_read(2)
+            price_cutoff = weekly_average_read(1)
             #price_cutoff = daily_average(price_data)
         # 10PM fix daily clock drift
         if price_hour() == 22:
