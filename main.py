@@ -79,10 +79,10 @@ download = 'CSV'
 # How many Daily Price Averages do you want to use? [1-7]
 days = 1
 
-# What is the Minimum Price that power should always be turned on?
+# Below what Price should power always be turned on?
 min = 0.04
 
-# What is the Maximum Price that power should always be turned off?
+# Above what Price should power always be turned off?
 max = 0.09
 
 # By default, power is turned off if the Price is higher than the Average (50%).
@@ -206,8 +206,8 @@ def led(color):
         TinyPICO_RGB.off()
 
 # Turn 433MHz Power Relay ON/OFF
-def power(price_data, hour, price_cutoff, min=0.04, max=0.09):
-    if price_data[hour] < min or price_data[hour] < price_cutoff:
+def power(price_data, hour, price_cutoff, min, max):
+    if price_data[hour] <= min or price_data[hour] <= price_cutoff:
         print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {min:.3f} minimum or {price_cutoff:.3f} cutoff... Turning power ON')
         led('green')
         transmit('on')
@@ -253,7 +253,7 @@ price_data = psp.parse(raw_data)                  # Parse raw_data into hour:pri
 weekly_average_write(price_data)                  # Write Average Price to Key Store
 price_cutoff = weekly_average_read(days, percent) # Use Weekly Average Price from Key Store
 
-power(price_data, price_hour(), price_cutoff)     # Turn Power ON/OFF Based on Current Hour Price
+power(price_data, price_hour(), price_cutoff, min, max)  # Turn ON/OFF now at boot
 time.sleep(65)                                    # Wait a bit before jumping into While loop
 
 
@@ -274,7 +274,7 @@ while True:
         if not psp.date_match(raw_data, date()):
             raw_data = psp.download(date())
             price_data = psp.parse(raw_data)
-        power(price_data, price_hour(), price_cutoff)
+        power(price_data, price_hour(), price_cutoff, min, max)
         time.sleep(65) 
     else:
         wdt.feed()  # Reset Hardware Watchdog Timer
