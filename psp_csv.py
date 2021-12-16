@@ -33,8 +33,14 @@ def download(date):
             if 'Loadzone' in line:
                 if 'LMP' in line:
                     csv = line 
-    print(f'{timestamp()} New {date} MISO CSV data downloaded...')
-    return f'{miso_date},{csv}'
+    if csv:
+        print(f'{timestamp()} New {date} MISO CSV data downloaded...')
+        return f'{miso_date},{csv}'
+    else:
+        print(f'{timestamp()} New {date} MISO CSV data is not valid... Exiting')
+        print('DEBUG - Content of Downloaded Data:')
+        print(lines)
+        exit()
 
 # Parse MISO CSV Data
 #    NOTES: Hours are in Eastern Standard Time (UTC -5)
