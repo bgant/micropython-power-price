@@ -254,14 +254,19 @@ weekly_average_write(price_data)                  # Write Average Price to Key S
 price_cutoff = weekly_average_read(days, percent) # Use Weekly Average Price from Key Store
 
 power(price_data, price_hour(), price_cutoff, min, max)  # Turn ON/OFF now at boot
-time.sleep(65)                                    # Wait a bit before jumping into While loop
 
 
 #------------
 # Main Loop
 #------------
 
-while True:
+def handleInterrupt(timer):
+    global weekly_average_write  # Now that this is a function, 
+    global price_cutoff          # need to use the global values
+    global raw_data              # for all variables instead of creating
+    global price_data            # new ones each time this function runs
+    global min
+    global max
     if is_top_of_hour():
         # 1AM update weekly average data
         if price_hour() == 0:
@@ -275,8 +280,16 @@ while True:
             raw_data = psp.download(date())
             price_data = psp.parse(raw_data)
         power(price_data, price_hour(), price_cutoff, min, max)
-        time.sleep(65) 
     else:
+        #print('not top of hour yet')
         wdt.feed()  # Reset Hardware Watchdog Timer
-        time.sleep(30)
 
+# ESP32 has four hardware timers to choose from (0 through 3)
+from machine import Timer
+timer = Timer(0)
+
+# period in milliseconds
+timer.init(period=60000, mode=Timer.PERIODIC, callback=handleInterrupt)
+# Stop with: timer.deinit()
+# View with: timer.value()
+# View list of variables in memory with: dir()
