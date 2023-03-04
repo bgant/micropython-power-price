@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2021-11-21
+Updated: 2023-03-03
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -24,33 +24,34 @@ mkdir ~/micropython-setup
 cd ~/micropython-setup
 
 python3 -m pip install pyvenv
-python3 -m venv micropython-env
-source micropython-env/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 python3 -m pip list | egrep -v "Package|----" | awk '{print $1}' | xargs -I {} python3 -m pip install --upgrade {}
-python3 -m pip install esptool
-python3 -m pip install mpremote
+python3 -m pip install wheel esptool mpremote
 sudo usermod -aG `stat -c "%G" /dev/ttyUSB0` $USER  <-- May need to reboot PC
 mpremote connect /dev/ttyUSB0                       <-- test connection / Ctrl-] to exit
+  --OR--
+mpremote u0
 
 wget https://micropython.org/resources/firmware/tinypico-20210902-v1.17.bin
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 tinypico-20210902-v1.17.bin
 
 wget https://github.com/micropython/micropython-lib/raw/master/python-ecosys/urequests/urequests.py
-mpremote cp urequests.py :
+mpremote u0 cp urequests.py :
 
 git clone https://github.com/peterhinch/micropython-remote
 cd micropython-remote/
-mpremote cp -r tx/ :
+mpremote u0 cp -r tx/ :
 
 cd ../
 git clone https://github.com/bgant/micropython-wifi
 cd micropython-wifi/
-mpremote cp key_store.py :
-mpremote cp timezone.py :
-mpremote cp TinyPICO_RGB.py :
-mpremote cp boot.py :
-mpremote  <-- to enter REPL
+mpremote u0 cp key_store.py :
+mpremote u0 cp timezone.py :
+mpremote u0 cp TinyPICO_RGB.py :
+mpremote u0 cp boot.py :
+mpremote u0  <-- to enter REPL
 from machine import reset
 reset()
 <enter your Wifi SSID and Password and make sure it connects>
@@ -60,12 +61,12 @@ reset()
 cd ../
 git clone https://github.com/bgant/micropython-power-price
 cd micropython-power-price/
-mpremote cp 433MHz_Dewenwils_RC-042_E211835.json :
-mpremote cp psp_csv.py :   <-- OR psp_json.py OR psp_html.py 
-mpremote cp main.py :
+mpremote u0 cp 433MHz_Dewenwils_RC-042_E211835.json :
+mpremote u0 cp psp_csv.py :   <-- OR psp_json.py OR psp_html.py 
+mpremote u0 cp main.py :
 
-mpremote  <-- to enter REPL
-reset()   <-- boot.py and main.py should run
+mpremote u0  <-- to enter REPL
+reset()      <-- boot.py and main.py should run
 '''
 
 
