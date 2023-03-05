@@ -274,8 +274,8 @@ def handleInterrupt(timer):
         if price_hour() == 0:
             weekly_average_write(price_data)
             price_cutoff = weekly_average_read(days, percent)
-        # 10PM fix daily clock drift
-        if price_hour() == 22:
+        # Fix daily clock drift
+        if price_hour() % 2 == 0:  # Set Time every even hour
             ntptime.settime()
         # Download new data if current hour's date does not match data's date
         if not psp.date_match(raw_data, date()):
