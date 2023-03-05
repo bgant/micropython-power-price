@@ -95,7 +95,7 @@ percent = 60
 # Import Modules
 #-----------------
 
-# Built-in Micropython Modules
+# Built-in Micropython Modules / view with help('modules')
 from machine import reset, WDT
 from sys import exit
 import time
@@ -293,6 +293,6 @@ timer = Timer(0)
 
 # period in milliseconds
 timer.init(period=60000, mode=Timer.PERIODIC, callback=handleInterrupt)
-# Stop with: timer.deinit()
-# View with: timer.value()
-# View list of variables in memory with: dir()
+# View Timer value: timer.value()   Stop Timer: timer.deinit()
+# List of variables: dir()
+# Time Commands: ntp()  time.localtime()  ntptime.settime()
