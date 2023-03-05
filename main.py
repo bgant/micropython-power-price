@@ -101,6 +101,7 @@ from sys import exit
 import time
 import json
 import ntptime
+import gc
 
 # A chance to hit Ctrl+C in REPL for Debugging
 print('main.py: Press CTRL+C to enter REPL...')
@@ -281,9 +282,10 @@ def handleInterrupt(timer):
             raw_data = psp.download(date())
             price_data = psp.parse(raw_data)
         power(price_data, price_hour(), price_cutoff, min, max)
+        gc.collect()  # Just in case
     else:
         #print('not top of hour yet')
-        wdt.feed()  # Reset Hardware Watchdog Timer
+        wdt.feed()    # Reset Hardware Watchdog Timer
 
 # ESP32 has four hardware timers to choose from (0 through 3)
 from machine import Timer
