@@ -21,7 +21,7 @@ import urequests
 # Download Power Smart Pricing data in CSV Format from MISO
 def download(date):
     url = f"https://docs.misoenergy.org/marketreports/{date.replace('-','')}_da_expost_lmp.csv"
-    headers = {'Range': 'bytes=0-40000', 'User-Agent': 'https://github.com/bgant/micropython-power-price'}
+    headers = {'Range': 'bytes=0-50000', 'User-Agent': 'https://github.com/bgant/micropython-power-price'}
     response = urequests.get(url, headers=headers)
     raw_data = str(response.content)  # Only downloaded the bytes Range needed to reducing processing time
     response.close()
