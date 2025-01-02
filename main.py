@@ -37,8 +37,8 @@ wget https://micropython.org/resources/firmware/tinypico-20210902-v1.17.bin
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 tinypico-20210902-v1.17.bin
 
-git clone https://github.com/peterhinch/micropython-remote
-cd micropython-remote/
+git clone https://github.com/peterhinch/micropython_remote
+cd micropython_remote/
 mpremote u0 cp -r tx/ :
 
 cd ../
