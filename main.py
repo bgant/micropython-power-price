@@ -87,7 +87,10 @@ max = 0.09
 # Do you want to cutoff the power at a higher or lower Percentage? [0-100]
 percent = 60
 
+# Do you want to send data to a Webdis server?
+webdis_enabled = True
 
+ 
 #-----------------
 # Import Modules
 #-----------------
@@ -107,7 +110,8 @@ time.sleep(2)
 # Downloaded Micropython Modules
 import key_store
 from wifi import WIFI
-from webdis import WEBDIS
+if webdis_enabled:
+    from webdis import WEBDIS
 from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
@@ -125,7 +129,8 @@ else:
     exit()
 
 # Create Webdis Object
-webdis = WEBDIS()
+if webdis_enabled:
+    webdis = WEBDIS()
 
 # Connect to Wifi
 wifi = WIFI()
@@ -300,8 +305,9 @@ def handleInterrupt(timer):
         gc.collect()  # Just in case
     else:
         #print('not top of hour yet')
-        webdis.timeseries('webdis-power-price',price_data[price_hour()])
-        webdis.timeseries('webdis-power-state',power_state)
+        if webdis_enabled:
+            webdis.timeseries('webdis-power-price',price_data[price_hour()])
+            webdis.timeseries('webdis-power-state',power_state)
         wdt.feed()    # Reset Hardware Watchdog Timer
 
 # ESP32 has four hardware timers to choose from (0 through 3)
