@@ -15,5 +15,5 @@ I drive to town almost every day. I am charging from a 120V outlet and with the 
 
 ## Future Plans
 
-I hope to replace my Chevy Volt with a Ford F-150 Lightning. The truck comes with a 240V charger that can also act as a transfer switch to provide electricity to the house from the truck batteries when the main power is down. I would like to use a PLC or some other device with these scripts to transfer house power to the truck when prices are high and recharge the batteries when prices are low.
+I hope to replace my Chevy Volt with a fully Electric Vehicle with 240V Bi-Directional Charging. That could allow the vehicle to provide electricity to the house from the batteries when the main power is down. I would like to use a PLC or some other device ([EP Cube](https://epcube.com/)?) with these scripts to transfer house power to the vehicle when prices are high and recharge the batteries when prices are low.
 
