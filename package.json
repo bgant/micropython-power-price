@@ -2,7 +2,7 @@
   "urls": [
     ["main.py", "github:bgant/micropython-power-price/main.py"],
     ["psp_csv.py", "github:bgant/micropython-power-price/psp_csv.py"],
-    ["thermocouple.py", "github:bgant/micropython-power-price/433MHz_Dewenwils_RC-042_E211835.json"]
+    ["433MHz_Dewenwils_RC-042_E211835.json", "github:bgant/micropython-power-price/433MHz_Dewenwils_RC-042_E211835.json"]
   ],
   "deps": [],
   "version": "0.2"
