@@ -124,7 +124,7 @@ else:
     print(f'{download} is not a valid download mechanism... Exiting')
     exit()
 
-# Setup Webdis Object
+# Create Webdis Object
 webdis = WEBDIS()
 
 # Connect to Wifi
