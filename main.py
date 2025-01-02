@@ -1,7 +1,7 @@
 '''
 Brandon Gant
 Created: 2021-10-11
-Updated: 2023-03-03
+Updated: 2025-01-01
 
 ### Overview:
 I am signed up for Hourly Electricity Pricing. I created this project
@@ -37,25 +37,22 @@ wget https://micropython.org/resources/firmware/tinypico-20210902-v1.17.bin
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 tinypico-20210902-v1.17.bin
 
-wget https://github.com/micropython/micropython-lib/raw/master/python-ecosys/urequests/urequests.py
-mpremote u0 cp urequests.py :
-
 git clone https://github.com/peterhinch/micropython-remote
 cd micropython-remote/
 mpremote u0 cp -r tx/ :
 
 cd ../
-git clone https://github.com/bgant/micropython-wifi
-cd micropython-wifi/
+git clone https://github.com/bgant/micropython
+cd micropython/modules
 mpremote u0 cp key_store.py :
+mpremote u0 cp wifi.py :
+mpremote u0 cp webdis.py :
 mpremote u0 cp timezone.py :
 mpremote u0 cp TinyPICO_RGB.py :
-mpremote u0 cp boot.py :
 mpremote u0  <-- to enter REPL
 from machine import reset
 reset()
 <enter your Wifi SSID and Password and make sure it connects>
-<if you made a mistake run import key_store and key_store.init() to change SSID and Password>
 <Ctrl+] to exit REPL>
 
 cd ../
@@ -100,7 +97,6 @@ from machine import reset, WDT
 from sys import exit
 import time
 import json
-import ntptime
 import gc
 
 # A chance to hit Ctrl+C in REPL for Debugging
@@ -109,6 +105,9 @@ print()
 time.sleep(2) 
 
 # Downloaded Micropython Modules
+import key_store
+from wifi import WIFI
+from webdis import WEBDIS
 from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
@@ -125,6 +124,14 @@ else:
     print(f'{download} is not a valid download mechanism... Exiting')
     exit()
 
+# Setup Webdis Object
+webdis = WEBDIS()
+
+# Connect to Wifi
+wifi = WIFI()
+wifi.connect()
+wifi.ntp()
+
 
 #-------------------
 # Define Functions
@@ -140,6 +147,7 @@ def daily_average(price_data):
 
 # Update weekly_averages dictionary to key_store.db
 def weekly_average_write(price_data):
+    key_store.enable()
     try:
         weekly_averages = key_store.get('weekly_averages')
         weekly_averages = json.loads(weekly_averages)
@@ -149,11 +157,14 @@ def weekly_average_write(price_data):
         weekly_averages = {}
         weekly_averages[time.localtime(tz())[6]] = daily_average(price_data)  # Add Today's Average Price
     key_store.set('weekly_averages', str(weekly_averages))
+    key_store.close()
 
 # Read weekly_averages dictionary from key_store.db and average
 # the prices across X number of days where X is 1 to 7 days
 def weekly_average_read(days=7, percentage=50):
+    key_store.enable()
     weekly_averages = key_store.get('weekly_averages')    
+    key_store.close()
     weekly_averages = json.loads(weekly_averages)
     price = 0.0
     for n in range(0, days):
@@ -209,18 +220,22 @@ def led(color):
 
 # Turn 433MHz Power Relay ON/OFF
 def power(price_data, hour, price_cutoff, min, max):
+    global power_state
     if price_data[hour] <= min or price_data[hour] <= price_cutoff:
         print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is  lower than {min:.3f} minimum or {price_cutoff:.3f} cutoff... Turning power ON')
         led('green')
         transmit('on')
+        power_state = 1
     elif price_data[hour] > max or price_data[hour] > price_cutoff:
         print(f'{timestamp()} Hour {hour:02} Price {price_data[hour]:.3f} is higher than {max:.3f} maximum or {price_cutoff:.3f} cutoff... Turning power OFF')
         led('red')
         transmit('off')
+        power_state = 0
     else:
         print(f'Not sure what happened with price {price_data[hour]}')
         led('off')
         transmit('off')
+        power_state = 0 
 
 # Test a specific UTC date using a timestamp with psp_csv.py or psp_json.py (NOT psp_html.py) 
 def debug(timestamp):
@@ -276,7 +291,7 @@ def handleInterrupt(timer):
             price_cutoff = weekly_average_read(days, percent)
         # Fix daily clock drift
         if price_hour() % 2 == 0:  # Set Time every even hour
-            ntptime.settime()
+            wifi.ntp()
         # Download new data if current hour's date does not match data's date
         if not psp.date_match(raw_data, date()):
             raw_data = psp.download(date())
@@ -285,6 +300,8 @@ def handleInterrupt(timer):
         gc.collect()  # Just in case
     else:
         #print('not top of hour yet')
+        webdis.timeseries('webdis-power-price',price_data[price_hour()])
+        webdis.timeseries('webdis-power-state',power_state)
         wdt.feed()    # Reset Hardware Watchdog Timer
 
 # ESP32 has four hardware timers to choose from (0 through 3)
