@@ -116,6 +116,7 @@ from timezone import tz, isDST
 from tx import TX
 from tx.get_pin import pin
 import TinyPICO_RGB
+import uping
 
 # Choose a single data download mechanism
 if download.lower() is 'csv':
@@ -255,6 +256,22 @@ def debug(timestamp):
     exit()
 #debug(689428800)  # time.mktime((2021,11,5,12,0,0,0,0)) to get UTC timestamp
 
+def network_fail():
+    print('Unable to access network... resetting...')
+    sleep_ms(15000)
+    reset()
+
+def ping_check(target=wifi.gateway):
+    try:
+        pong = uping.ping(target,quiet=True)
+        if not pong[1]:  # Zero packets received
+            network_fail()
+            return False
+        return True
+    except:
+        network_fail()   # Ping could not resolve name or access network
+        return False
+
 
 #---------------------
 # Initialize on boot
@@ -289,6 +306,7 @@ def handleInterrupt(timer):
     global price_data            # new ones each time this function runs
     global min
     global max
+    ping_check()
     if is_top_of_hour():
         # 1AM update weekly average data
         if price_hour() == 0:
